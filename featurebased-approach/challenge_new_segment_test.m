@@ -1,0 +1,213 @@
+%for OLAP = 0.7:0.1:0.9
+OLAP = 0.8;
+% function challenge_new
+% Defining path (for windows and linux)
+slashchar = char('/'*isunix + '\'*(~isunix));
+mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
+addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
+
+dbpath =  [mainpath slashchar 'preparation' slashchar 'training2017' slashchar];
+if isunix
+    spath = '~/Dropbox/PhysioChallenge2017/Features/'; % saving path
+else
+    spath = dbpath;
+end
+
+%% Parameters
+WINSIZE = 10; % window size (in sec)
+Nfeatfern = 58; % number of features, CHANGE!!
+Nfeatoli = 111;
+Nfeats = Nfeatoli + Nfeatfern;
+Ndet = 5;
+
+% Find recordings
+cd([mainpath 'preparation' slashchar])
+filename = [dbpath 'REFERENCE-v2.csv'];
+delimiter = ',';
+formatSpec = '%q%q%[^\n\r]';
+fileID = fopen(filename,'r');
+dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
+fls = dataArray{1};
+ann = char(dataArray{2});
+% Output log
+% diary('log.txt')
+% diary on
+clear dataArray delimiter filename formatSpec
+%% Close the text file.
+fclose(fileID);
+tab_output = cell(length(fls),Nfeats+2);
+tab_output(:,1:2) = [fls cellstr(ann)];
+% persistent allfeats
+fs = 300;
+
+% Wide BP
+Fhigh = 5;  % highpass frequency [Hz]
+Flow = 45;   % low pass frequency [Hz]
+Nbut = 10;     % order of Butterworth filter
+d_bp= design(fdesign.bandpass('N,F3dB1,F3dB2',Nbut,Fhigh,Flow,fs),'butter');
+[b_bp,a_bp] = tf(d_bp);
+
+% Narrow BP
+Fhigh = 1;  % highpass frequency [Hz]
+Flow = 100;   % low pass frequency [Hz]
+Nbut = 10;     % order of Butterworth filter
+d_bp= design(fdesign.bandpass('N,F3dB1,F3dB2',Nbut,Fhigh,Flow,fs),'butter');
+[b_bp2,a_bp2] = tf(d_bp);
+
+clear Fhigh Flow Nbut d_bp
+allfeats = cell2table(cell(0,Nfeats+2));
+% Run through files
+
+for f = 1:length(fls)           
+    %% Loading data
+    data = myLoadData([dbpath fls{f} '.mat']);
+    fname = fls{f};
+    signal = data.val;
+    if size(signal,1)<size(signal,2), signal = signal'; end
+    signalraw =  signal;    
+    
+    %% Preprocessing
+    signal = filtfilt(b_bp,a_bp,signal);             % filtering narrow
+    signal = detrend(signal);                        % detrending (optional)
+    signal = signal - mean(signal);
+    signal = signal/std(signal);                     % standardizing
+    signalraw = filtfilt(b_bp2,a_bp2,signalraw);     % filtering wide
+    signalraw = detrend(signalraw);                  % detrending (optional)
+    signalraw = signalraw - mean(signalraw);
+    signal_narrow = signalraw/std(signalraw);        % standardizing
+    disp(['Preprocessed ' fname '...'])
+    
+    
+     
+    startp = 1;
+    endp = WINSIZE*fs;
+    looptrue = true;
+    nseg = 1;
+    while looptrue
+        % Conditions to stop loop
+        if length(signal) < WINSIZE*fs
+            endp = length(signal);
+            looptrue = false;
+            continue
+        end
+        if nseg > 1                        
+            startp(nseg) = startp(nseg-1) + round((1-OLAP)*WINSIZE*fs);
+            if length(signal) - endp(nseg-1) < 0.5*WINSIZE*fs
+                endp(nseg) = length(signal);
+            else
+                endp(nseg) = startp(nseg) + WINSIZE*fs -1;            
+            end
+        end
+        if endp(nseg) == length(signal) 
+            looptrue = false; 
+            nseg = nseg - 1;
+        end
+        nseg = nseg + 1;
+    end
+    
+    fetbag = {};
+    parfor n = 1:nseg            
+        % Get signal of interest
+        sig_seg = signal(startp(n):endp(n));
+        sig_segraw = signalraw(startp(n):endp(n));
+                        
+        % QRS detect
+        [qrsseg,featqrs] = multi_qrsdetect(sig_seg,fs,[fname '_s' num2str(n)]);
+        
+        % Oliver features
+        if length(qrsseg{end})>5 % if too few detections, returns zeros
+            try
+                feat_basic=oliver_features(sig_seg,qrsseg{end}./fs,fs);
+                feats_poincare = get_poincare(qrsseg{end}./fs,fs);
+                %feat_vollmer = get_vollmer(qrsseg{end},fs);
+                feat_oli = [feat_basic, feats_poincare];
+                feat_oli(~isreal(feat_oli)|isnan(feat_oli)|isinf(feat_oli)) = 0; % removing not numbers
+            catch
+                warning('Some HRV code failed.')
+                feat_oli = zeros(1,Nfeatoli);
+            end
+        else
+            disp('Skipping HRV analysis due to shortage of peaks..')
+            feat_oli = zeros(1,Nfeatoli);
+        end
+        
+        % Fernando features
+        HRbpm = median(60./(diff(qrsseg{end})));
+        %obvious cases: tachycardia ( > 100 beats per minute (bpm) in adults)
+        feat_tachy = normcdf(HRbpm,120,20); % sampling from normal CDF
+        %See e.g.   x = 10:10:200; p = normcdf(x,120,20); plot(x,p)
+        
+        %obvious cases: bradycardia ( < 60 bpm in adults)
+        feat_brady = 1-normcdf(HRbpm,60,20);
+        
+        % SQI metrics
+        feats_sqi = ecgsqi(sig_seg,qrsseg,fs);
+        
+        % Features on residual        
+        featsres = residualfeats(sig_segraw,fs,qrsseg{end});
+        
+        % Morphological features
+        feats_morph = morphofeatz(sig_segraw,fs,qrsseg,[fname '_s' num2str(n)]);
+        
+        
+        feat_fer=[featqrs,feat_tachy,feat_brady,double(feats_sqi),featsres,feats_morph];
+        feat_fer(~isreal(feat_fer)|isnan(feat_fer)|isinf(feat_fer)) = 0; % removing not numbers
+        
+        % Save features to table for training
+        feats = [feat_oli,feat_fer];
+        fetbag{n} = feats;
+        %clear qrsseg sig_seg sig_segraw HRbpm feat_tachy feat_brady feats_morph2 featsres feat_fer feat_oli feat_basic feats_poincare
+    end
+    thisfeats = array2table([repmat(f,nseg,1),[1:nseg]',cell2mat(fetbag')]);%#ok<NBRAK>
+    allfeats = [allfeats;thisfeats];
+    
+    
+    
+    
+    %     % Print figures
+    %     figure(f)
+    %     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0 1 1]);
+    %     subplot(2,1,1)
+    %     plot(signal)
+    %     title({['Rec: ' fname] ; ['Label: ' ann(f)]},'Interpreter','none');
+    %     hold on
+    %     plot(qrs{end-1},signal(qrs{end-1}),'xb')
+    %     plot(qrs{end},signal(qrs{end}),'or')
+    %     subplot(2,1,2)
+    %     plot(qrs{end}(2:end),diff(qrs{end})*1000/fs)
+    %     ylabel('RR intervals (ms)')
+    %     ylim([250 1300])
+    %     saveas(gcf,[mainpath 'plots/' fls{f} '.jpg']);
+    %     close
+end
+delete('gqrsdet*.*')
+% diary off
+%% Saving Output
+names = {'rec_number' 'seg_number' 'sample_AFEv' 'meanRR' 'medianRR' 'SDNN' 'RMSSD' 'SDSD' 'NN50' 'pNN50' 'LFpeak' 'HFpeak' 'totalpower' 'LFpower' ...
+    'HFpower' 'nLF' 'nHF' 'LFHF' 'PoincareSD1' 'PoincareSD2'  ...
+    'RR' 'DET' 'ENTR' 'L' 'TKEO1'  'DAFa2' 'LZ' ...
+    'Clvl1' 'Clvl2' 'Clvl3' 'Clvl4' 'Clvl5' 'Clvl6' 'Clvl7' 'Clvl8' 'Clvl9' ...
+    'Clvl10' 'Dlvl1' 'Dlvl2' 'Dlvl3' 'Dlvl4' ...
+    'Dlvl5' 'Dlvl6' 'Dlvl7' 'Dlvl8' 'Dlvl9' 'Dlvl10' ...
+    'percR50' 'percR100' 'percR200' 'percR300' 'medRR' 'meddRR' 'iqrRR' 'iqrdRR' 'bins1' 'bins2' 'bins1nL' 'bins2nL' 'bins1nS' 'bins2nS' ...
+    'edgebins1' 'edgebins2' 'edgebins1nL' 'edgebins2nL' 'edgebins1nS' 'edgebins2nS' 'minArea' 'minAreanL' 'minAreanS' ...
+    'minCArea' 'minCAreanL' 'minCAreanS' 'Perim' 'PerimnL' 'PerimnS' 'PerimC' 'PerimCnL' 'PerimCnS' ...
+    'DistCen' 'DistCennL' 'DistCennS' 'DistNN' 'DistNNnL' 'DistNNnS' 'DistNext' 'DistNextnL' 'DistNextnS' 'ClustDistMax' 'ClustDistMin' ...
+    'ClustDistMean' 'ClustDistSTD' 'ClustDistMed' 'MajorAxis' 'percR3' 'percR5' 'percR10' 'percR20' 'percR30' 'percR40' ...
+    'Xcent' 'Ycent' 'rad1' 'rad2' 'rad1rad2' 'theta' 'NoClust1' 'NoClust2' 'NoClust3' 'NoClust4' 'NoClust5' 'NoClust6' 'NoClust7'};
+names = [names 'gentemp' 'numect' 'amp_varsqi' 'amp_stdsqi' 'amp_mean'];
+names = [names 'tachy' 'brady' 'stdsqi' 'ksqi' 'ssqi' 'psqi'];
+combs = nchoosek(1:Ndet,2);
+combs = num2cell(combs,2);
+names = [names cellfun(@(x) strtrim(['bsqi_',num2str(x(1)) num2str(x(2))]),combs,'UniformOutput',false)'];
+names = [names arrayfun(@(x) strtrim(['rsqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
+names = [names arrayfun(@(x) strtrim(['csqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
+names = [names arrayfun(@(x) strtrim(['xsqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
+names = [names 'res1' 'res2' 'res3' 'res4' 'res5'];
+names = [names 'QRSheight','QRSwidth','QRSpow','noPwave','Pheight','Pwidth','Ppow','Theight',...
+    'Twidth','Tpow','Theightnorm','Pheightnorm','Prelpow','PTrelpow','Trelpow','QTlen','PRlen'];
+allfeats.Properties.VariableNames = names;    
+    
+save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) '.mat'],'allfeats','ann');
+
+  
