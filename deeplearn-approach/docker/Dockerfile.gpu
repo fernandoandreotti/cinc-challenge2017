@@ -1,0 +1,181 @@
+FROM nvidia/cuda:8.0-cudnn5-devel-ubuntu14.04
+MAINTAINER Fernando Andreotti <fernando.andreotti@eng.ox.ac.uk>
+
+#RUN rm /bin/sh && ln -s /bin/bash /bin/sh # Force bash
+ENTRYPOINT ["/bin/bash", "-c" ]
+# Versions used for some packages
+ARG CONDA_VERSION=4.3.1
+ARG CONDA_ENV
+ARG TENSORFLOW_VERSION=1.0*
+ARG KERAS_VERSION=2.0.2
+ARG PYTHON_VERSION=3.5
+# tensorflow GPU version is commented out bellow
+
+USER root
+
+RUN echo -e "\n**********************\nNVIDIA Driver Version\n**********************\n" && \
+	cat /proc/driver/nvidia/version && \
+	echo -e "\n**********************\nCUDA Version\n**********************\n" && \
+	nvcc -V && \
+ echo -e "\n\nBuilding your Deep Learning Docker Image...\n"
+
+# Install some dependencies
+ENV DEBIAN_FRONTEND noninteractive
+ENV CONDA_ENV_PATH /opt/miniconda
+ENV MYCONDA_ENV "deeplearn"
+ENV CONDA_ACTIVATE "source $CONDA_ENV_PATH/bin/activate $MYCONDA_ENV"
+
+RUN apt-get update --fix-missing -qq \
+ && apt-get install --no-install-recommends -y \
+    # install essentials
+		bc \
+		build-essential \
+		bzip2 \
+		cmake \
+		curl \
+		g++ \
+		gfortran \
+		git \
+		mercurial \
+		subversion \
+		language-pack-en \
+		libatlas-dev \
+		libatlas3gf-base \
+		libcurl4-openssl-dev \ 
+		libffi-dev \
+		libfreetype6-dev \
+		libglib2.0-0 \   
+		libhdf5-dev \
+		liblcms2-dev \
+		libopenblas-dev \		
+		libssl-dev \
+		libtiff5-dev \
+		libwebp-dev \
+		libzmq3-dev \
+		nano \
+		pkg-config \
+		software-properties-common \
+		unzip \
+		vim \
+		wget \
+		zlib1g-dev \
+		qt5-default \
+		libvtk6-dev \
+		zlib1g-dev
+
+
+# Install Anaconda 4.3.1 with Python 3
+#RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
+#    wget https://repo.continuum.io/archive/Anaconda3-${CONDA_VERSION}-Linux-x86_64.sh -O ~/anaconda.sh && \
+#	/bin/bash ~/anaconda.sh -b -p $CONDA_ENV_PATH && \
+#	rm ~/anaconda.sh
+	
+
+
+# Install miniconda to /opt/miniconda
+RUN curl -LO http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+RUN /bin/bash Miniconda-latest-Linux-x86_64.sh -p $CONDA_ENV_PATH -b
+RUN rm Miniconda-latest-Linux-x86_64.sh
+ENV PATH=$CONDA_ENV_PATH/bin:${PATH}
+RUN conda update --quiet --yes conda
+
+ENV PATH ${CONDA_ENV_PATH}/bin:$PATH
+
+# Creating Anaconda environment
+RUN conda create -y --name $MYCONDA_ENV python=${PYTHON_VERSION}
+
+# Install Python 3 packages
+
+RUN conda install -c anaconda -y -n $MYCONDA_ENV numpy=1.12.0
+RUN conda install -y -n $MYCONDA_ENV\
+    'beautifulsoup4=4.5*' \
+    'bokeh=0.12*' \
+    'cloudpickle=0.2*' \
+    'cython=0.25*' \
+    'dill=0.2*' \
+    'hdf5=1.8.17' \
+    'h5py=2.6*' \
+    'ipython=5.1*' \	
+    'ipykernel=4.5*' \
+    'ipywidgets=5.2*' \
+    'jupyter=1.0*' \
+    'matplotlib=2.0*' \
+    'nose=1.3*' \
+    'notebook=4.3*' \
+    'numba=0.30*' \
+    'numexpr=2.6*' \
+    'pandas=0.19*' \
+    'patsy=0.4*' \
+    'pip=9.0*' \
+    'python=3.5*' \
+    'scipy=0.18*' \
+    'scikit-learn=0.18*' \
+    'scikit-image=0.12*' \
+    'seaborn=0.7*' \
+    'six=1.10*' \
+    'sphinx=1.5*' \
+    'spyder=3.1*' \
+    'sqlalchemy=1.1*' \
+    'statsmodels=0.6*' \
+    'sympy=1.0*' \
+    'terminado=0.6' \
+    'xlrd=1.0*'  && \
+    conda clean -tipsy
+
+# Install TensorFlow
+#RUN conda install -c conda-forge -n $MYCONDA_ENV tensorflow=${TENSORFLOW_VERSION}
+RUN conda install -c conda-forge -n $MYCONDA_ENV tensorflow-gpu=${TENSORFLOW_VERSION}
+
+# Install Keras
+ENV KERAS_BACKEND=tensorflow
+RUN conda install -c conda-forge -n $MYCONDA_ENV keras=${KERAS_VERSION}
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+RUN conda info --envs
+RUN sed -i 's/theano/tensorflow/g' ${CONDA_ENV_PATH}/envs/${MYCONDA_ENV}/etc/conda/activate.d/keras_activate.sh # make tensorflow default 
+
+# Visualization tools
+RUN conda install -c conda-forge -y -n $MYCONDA_ENV \
+	graphviz=2.38.0 \
+	pydotplus=2.0.2 \
+	tqdm
+
+
+
+RUN $CONDA_ACTIVATE && pip install --upgrade pip && \
+	pip install git+git://github.com/stared/keras-sequential-ascii.git \
+	pydot3
+
+###########################
+## Finishing up details ###
+###########################
+
+COPY awk '{if (/^selected = spyder /) {$0=$0 "/dark"}; print}' /sharedfolder/.config/spyder-py3/spyder.ini /sharedfolder/.config/spyder-py3/spyder.ini
+
+
+ENV HOME /sharedfolder
+
+# Set up Jupyter scripts
+WORKDIR /sharedfolder
+
+# Add a notebook profile.
+RUN mkdir -p -m 700 /sharedfolder/.jupyter/ && \
+	echo "c.NotebookApp.ip = '*'" >> /sharedfolder/.jupyter/jupyter_notebook_config.py
+
+# Set up notebook config
+COPY jupyter_notebook_config.py /sharedfolder/.jupyter/
+
+# Jupyter has issues with being run directly: https://github.com/ipython/ipython/issues/7062
+COPY run_jupyter.sh /sharedfolder/
+
+# Expose Ports for TensorBoard (6006), Ipython (8888)
+EXPOSE 6006 8888
+
+# RUN curl -sSL https://github.com/fchollet/keras/raw/master/examples/mnist_mlp.py | python # Test setup
+
+RUN ["/bin/bash", "-c","source activate deeplearn"]
+
+ENTRYPOINT ["/bin/bash", "-c"]
+
+CMD ["source activate deeplearn && /bin/bash"]
