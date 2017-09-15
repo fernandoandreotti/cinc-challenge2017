@@ -1,11 +1,7 @@
-# Approaches used on Computing in Cardiology Challenge 2017: Atrial Fibrillation (AF) Classification from a short single lead Electrocardiogram (ECG) recording
-----
+# Computing in Cardiology Challenge 2017
+### Atrial Fibrillation (AF) Classification from a short single lead Electrocardiogram (ECG) recording
 
-This repository aims at classifying short single-lead electrocardiogram (ECG) segments. This work was presented at the Computing in Cardiology conference 2017, as part of the Physionet Computing in Cardiology Challenge 2017 [(Clifford et al 2017)][2]
-
-
-
-
+This repository contains the solution to the CinC Challenge 2017 by [1], presented at the Computing in Cardiology conference 2017. As part of the Challenge, based on short single-lead ECG segments with 10-60 seconds duration, the classifier should output one of the following classes:
 
 | Class  | Description |
 | ----- | -------------------:|
@@ -15,25 +11,38 @@ This repository aims at classifying short single-lead electrocardiogram (ECG) se
 | ~ | noise segment |
 
 
+Two methodologies are proposed and are available on distict forlder in this repo:
 
-Two methodologies are available:
+* Classic feature-based MATLAB approach (`featurebased-approach` folder)
+* Deep Convolutional Network Approach in Python (`deeplearn-approach` folder)
 
-* Feature-based MATLAB approach
-* Deep Convolutional Network Approach in Python
 
+Here is a quick information about each approach.
+---
 ### Feature-based Approach (MATLAB)
+
 
 #### Dependencies
 
 
+---
 ### Deep Convolutional Neural Network (CNN) Approach (Python)
 
 
 
 #### Dependencies
+
+Random text
+
 **Docker**
 
+Random text
 
+
+
+
+# Acknowledgment
+All authors are affilated at the Institute of Biomedical Engineering, Department of Engineering Science, University of Oxford.
 
 # References
 
