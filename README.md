@@ -50,8 +50,9 @@ The following packages were used to match the Challenge Sandbox environment:
 To facilitate the reproduction of our network, a Docker [(what is Docker?)](https://www.docker.com/what-docker) image of the system architecture for running this code is made available under https://hub.docker.com/r/andreotti/challenge2017/ . The image was generated for CPU and GPUs machine, just modify `<system_architecture>` to `cpu` or `gpu` accordingly.
 
 To pull the Docker image use:
-
-    docker pull andreotti/challenge2017:<system_architecture>
+```bash
+docker pull andreotti/challenge2017:<system_architecture>
+```
       
 To run this image using Jupyter notebook, you should copy the contents of the `deeplearn-approach` folder into a `<LOCAL_FOLDER>` and use the following code:
 
