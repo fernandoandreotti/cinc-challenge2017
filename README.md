@@ -39,7 +39,11 @@ Residual Networks (ResNet) [3] are an architecture of CNNs that have produced ex
 
 ## Dependencies
 
-Random text
+The following packages were used to match the Challenge Sandbox environment:
+
+- Python v3.5
+- Tensorflow v1.0.0
+- Keras v2.0.2
 
 ### Docker
 
@@ -49,30 +53,21 @@ To pull the Docker image use:
 
     docker pull andreotti/challenge2017:<system_architecture>
       
-To run this image using Jupyter notebook, use:
+To run this image using Jupyter notebook, you should copy the contents of the `deeplearn-approach` folder into a `<LOCAL_FOLDER>` and use the following code:
 
 **CPU Version**
 ```bash
-docker run -it -p 8888:8888 -p 6006:6006 -v /sharedfolder:/sharedfolder andreotti/challenge2017:cpu
+docker run -it -p 8888:8888 -p 6006:6006 -v <LOCAL_FOLDER>:/sharedfolder andreotti/challenge2017:cpu
 ```
 	
 **GPU Version**
 ```bash
-nvidia-docker run -it -p 8888:8888 -p 6006:6006 -v /sharedfolder:/sharedfolder andreotti/challenge2017:gpu
+nvidia-docker run -it -p 8888:8888 -p 6006:6006 -v <LOCAL_FOLDER>:/sharedfolder andreotti/challenge2017:gpu
 ```
 
+Then the following line will start the Jupyter notebook on the Docker and give you a URL to follow on your machine's browser:
 
-
-The following packages were used:
-
-- 
-
-
-
-
-- Keras 
-
-
+    jupyter notebook --ip=0.0.0.0 --no-browser 
 
 
 # Acknowledgment
