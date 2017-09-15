@@ -25,7 +25,7 @@ Feature-based Approach (MATLAB)
 
 This approach makes use of several previously described heart rate variability metrics, morphological features and signal quality indices. After extracting features, two classifiers are trained,namely, an ensemble of bagged trees (50 trees) and multilayer perceptron (2-layer, 10 hidden neurons, feed-forward).
 
-#### Dependencies
+## Dependencies
 
 This code was tested on Matlab R2017a (Version 9.2). 
 
@@ -37,11 +37,11 @@ Deep Convolutional Neural Network (CNN) Approach (Python)
 
 Residual Networks (ResNet) [3] are an architecture of CNNs that have produced excelent results in computer vision. Recently, Rajpurkar _et al._ [4] applied a 34-layer ResNet (very similar to the one proposed by [3]) to classify 30-s single lead ECGs segments into 14 different classes. This network is reproduced in this work, implemented using Keras framework with Tensorflow as backend.
 
-#### Dependencies
+## Dependencies
 
 Random text
 
-**Docker**
+### Docker
 
 To facilitate the reproduction of our network, a Docker [(what is Docker?)](https://www.docker.com/what-docker) image of the system architecture for running this code is made available under https://hub.docker.com/r/andreotti/challenge2017/ . The image was generated for CPU and GPUs machine, just modify `<system_architecture>` to `cpu` or `gpu` accordingly.
 
