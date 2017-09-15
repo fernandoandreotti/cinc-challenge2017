@@ -17,17 +17,23 @@ Two methodologies are proposed and are available on distict forlder in this repo
 * Deep Convolutional Network Approach in Python (`deeplearn-approach` folder)
 
 
-Here is a quick information about each approach.
----
-### Feature-based Approach (MATLAB)
+Here follows quickstart information about each approach.
 
+
+Feature-based Approach (MATLAB)
+---
+
+This approach makes use of several previously described heart rate variability metrics, morphological features and signal quality indices. After extracting features, two classifiers are trained,namely, an ensemble of bagged trees (50 trees) and multilayer perceptron (2-layer, 10 hidden neurons, feed-forward).
 
 #### Dependencies
 
+This code was tested on Matlab R2017a (Version 9.2). 
 
+WFDB Toolbox for Matlab/Octave
+
+
+Deep Convolutional Neural Network (CNN) Approach (Python)
 ---
-### Deep Convolutional Neural Network (CNN) Approach (Python)
-
 
 
 #### Dependencies
