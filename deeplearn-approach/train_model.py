@@ -246,7 +246,7 @@ def model_eval(X_train,y_train,model):
     Kfold = 5
     Nsamp = 1705;
         
-    cvconfusion = np.zeros((4,4,epochs))
+    cvconfusion = np.zeros((4,4,Kfold))
     cvscores = []    
     for k in range(Kfold):
         callbacks = [
@@ -255,7 +255,7 @@ def model_eval(X_train,y_train,model):
             # Decrease learning rate by 0.1 factor
             AdvancedLearnignRateScheduler(monitor='val_loss', patience=1,verbose=1, mode='auto', decayRatio=0.1),            
             # Saving best model
-            ModelCheckpoint('weights-best_{}.hdf5'.format(k), monitor='val_loss', save_best_only=True, verbose=1),
+            ModelCheckpoint('ResNetmodel_{}.hdf5'.format(k), monitor='val_loss', save_best_only=True, verbose=1),
             ]
         print("Cross-validation run %d"%(k+1))
         idxval = np.random.choice(8528, Nsamp,replace=False)
@@ -287,14 +287,9 @@ def model_eval(X_train,y_train,model):
         config.gpu_options.allow_growth=True            
         sess = tf.Session(config=config)
         K.set_session(sess)
-        
-    scipy.io.savemat('CNNfinal3d.mat',mdict={'cvconfusion': cvconfusion.tolist()})  
-    ''' 
-    # Train using whole data
-    epochs = 20
-    model = get_model() # reset model
-    model.fit(X_train, y_train, epochs=epochs, batch_size=batch)
-    '''
+
+    scipy.io.savemat('ResNetconfusion.mat',mdict={'cvconfusion': cvconfusion.tolist()})  
+   
     return model
 
 ###########################
