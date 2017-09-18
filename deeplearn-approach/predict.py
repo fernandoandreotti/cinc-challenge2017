@@ -35,10 +35,4 @@ model = load_model('ResNetmodel.h5')
 print("Applying model ..")    
 prob = model.predict(data)
 ann = np.argmax(prob)
-print("Record {} classified as {} with {:3.1f}% certainty".format(record,classes[ann],100*prob[0,ann]))    
-
-
-# Write result to answers.txt
-answers_file = open("answers.txt", "a")
-answers_file.write("%s,%s\n" % (record, classes[ann]))
-answers_file.close()
+print("Record {} classified as {} with {:3.1f}% certainty".format(record,classes[ann],100*prob[0,ann]))
