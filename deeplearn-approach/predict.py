@@ -12,18 +12,13 @@ data = mat_data['val']
 # Parameters
 FS = 300
 maxlen = 30*FS
-classes = ['A', 'N', 'O']
+classes = ['A', 'N', 'O','~']
 
 # Preprocessing data
 print("Preprocessing recording ..")    
 import numpy as np
-data = np.nan_to_num(data) # removing NaNs and Infs
-#from scipy import signal
-#b, a = signal.butter(8, 100/FS,'low') # lowpass
-#data = signal.filtfilt(b, a, data)
-#b, a = signal.butter(8, 3/FS,'high') # highpass
-#data = signal.filtfilt(b, a, data)
 X = np.zeros((1,maxlen))
+data = np.nan_to_num(data) # removing NaNs and Infs
 data = data[0,0:maxlen]
 data = data - np.mean(data)
 data = data/np.std(data)
@@ -36,7 +31,7 @@ del X
 # Load and apply model
 print("Loading model")    
 from keras.models import load_model
-model = load_model('CNNnoiseless.h5')
+model = load_model('ResNetmodel.h5')
 print("Applying model ..")    
 prob = model.predict(data)
 ann = np.argmax(prob)
