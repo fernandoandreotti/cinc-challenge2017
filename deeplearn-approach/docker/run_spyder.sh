@@ -11,6 +11,7 @@ sudo xhost + local:docker
 # --rm will remove the container as soon as it ends
 docker run -ti --rm \
      -e DISPLAY=$DISPLAY \
+     -e QT_X11_NO_MITSHM=1  \
      -v /tmp/.X11-unix:/tmp/.X11-unix \
      -v /sharedfolder:/sharedfolder \
      andreotti/challenge2017:cpu
