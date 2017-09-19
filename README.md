@@ -16,10 +16,18 @@ Two methodologies are proposed and are available on distict forlder in this repo
 * Classic feature-based MATLAB approach (`featurebased-approach` folder)
 * Deep Convolutional Network Approach in Python (`deeplearn-approach` folder)
 
+# Installing
+
+# Downloading Challenge data
+
+```bash
+wget -r -np http://www.physionet.org/physiobank/database/challenge/2017/training/
+find . -name physionet.org\*.mat -exec cp {} training \;
+rm -R physionet.org
+```
+
 
 Here follows quickstart information about each approach.
-
-
 Feature-based Approach (MATLAB)
 ---
 
