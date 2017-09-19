@@ -1,14 +1,22 @@
-%for OLAP = 0.7:0.1:0.9
-OLAP = 0.8;
 % function challenge_new
 
+useSegments=1; % Set to 1 to segment the signals
+windowSize=10; % window size (in sec)
+percentageOverlap=0.8;
+
+% Defining path (for windows and linux)
+slashchar = char('/'*isunix + '\'*(~isunix));
+mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
+addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
+
+dbpath =  [mainpath slashchar 'preparation' slashchar 'training2017' slashchar];
+if isunix
+    spath = '~/Dropbox/PhysioChallenge2017/Features/'; % saving path
+else
+    spath = dbpath;
+end
+
 %% Parameters
-if WIN==1
-    WINSIZE = 10; % window size (in sec)
-Nfeatfern = 58; % number of features, CHANGE!!
-Nfeatoli = 113;
-Nfeats = Nfeatoli + Nfeatfern;
-Ndet = 5;
 
 % Find recordings
 cd([mainpath 'preparation' slashchar])
@@ -25,7 +33,7 @@ ann = char(dataArray{2});
 clear dataArray delimiter filename formatSpec
 %% Close the text file.
 fclose(fileID);
-tab_output = cell(length(fls),Nfeats+2);
+tab_output = cell(length(fls),179);
 tab_output(:,1:2) = [fls cellstr(ann)];
 % persistent allfeats
 fs = 300;
@@ -45,7 +53,7 @@ d_bp= design(fdesign.bandpass('N,F3dB1,F3dB2',Nbut,Fhigh,Flow,fs),'butter');
 [b_bp2,a_bp2] = tf(d_bp);
 
 clear Fhigh Flow Nbut d_bp
-allfeats = cell2table(cell(0,Nfeats+2));
+allfeats = cell2table(cell(0,179));
 % Run through files
 
 for f = 1:length(fls)           
@@ -67,6 +75,13 @@ for f = 1:length(fls)
     signal_narrow = signalraw/std(signalraw);        % standardizing
     disp(['Preprocessed ' fname '...'])
     
+    if useSegments==1
+        WINSIZE = windowSize; % window size (in sec)
+        OLAP = percentageOverlap;
+    else
+        WINSIZE = length(signal)/fs;
+        OLAP=0;
+    end
     
      
     startp = 1;
@@ -169,18 +184,17 @@ names = {'rec_number' 'seg_number' 'sample_AFEv' 'meanRR' 'medianRR' 'SDNN' 'RMS
     'Xcent' 'Ycent' 'rad1' 'rad2' 'rad1rad2' 'theta' 'NoClust1' 'NoClust2' 'NoClust3' 'NoClust4' 'NoClust5' 'NoClust6' 'NoClust7'};
 names = [names 'gentemp' 'numect' 'amp_varsqi' 'amp_stdsqi' 'amp_mean'];
 names = [names 'tachy' 'brady' 'stdsqi' 'ksqi' 'ssqi' 'psqi'];
-combs = nchoosek(1:Ndet,2);
+combs = nchoosek(1:5,2);
 combs = num2cell(combs,2);
 names = [names cellfun(@(x) strtrim(['bsqi_',num2str(x(1)) num2str(x(2))]),combs,'UniformOutput',false)'];
-names = [names arrayfun(@(x) strtrim(['rsqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
-names = [names arrayfun(@(x) strtrim(['csqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
-names = [names arrayfun(@(x) strtrim(['xsqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
+names = [names arrayfun(@(x) strtrim(['rsqi_',num2str(x)]),1:5,'UniformOutput',false)];
+names = [names arrayfun(@(x) strtrim(['csqi_',num2str(x)]),1:5,'UniformOutput',false)];
+names = [names arrayfun(@(x) strtrim(['xsqi_',num2str(x)]),1:5,'UniformOutput',false)];
 names = [names 'res1' 'res2' 'res3' 'res4' 'res5'];
 names = [names 'QRSheight','QRSwidth','QRSpow','noPwave','Pheight','Pwidth','Ppow','Theight',...
     'Twidth','Tpow','Theightnorm','Pheightnorm','Prelpow','PTrelpow','Trelpow','QTlen','PRlen'];
 allfeats.Properties.VariableNames = names;    
-
-spath = pwd;
+    
 save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) '.mat'],'allfeats','ann');
 
   

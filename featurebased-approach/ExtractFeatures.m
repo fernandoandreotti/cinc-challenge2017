@@ -1,33 +1,39 @@
-%for OLAP = 0.7:0.1:0.9
+
+useSegments=1; % Set to 1 to segment the signals
+windowSize=10; % window size (in sec)
+percentageOverlap=0.8;
+
+% Defining path (for windows and linux)
 slashchar = char('/'*isunix + '\'*(~isunix));
 mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
 addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
 
 dbpath =  [mainpath slashchar 'preparation' slashchar 'training2017' slashchar];
 if isunix
-    spath = '/data/PostDoc/scripts/af-classification/'; % saving path
+    spath = '~/Dropbox/PhysioChallenge2017/Features/'; % saving path
 else
     spath = dbpath;
 end
 
 %% Parameters
-WINSIZE = 10; % window size (in sec)
-OLAP = 0;
-Nfeatfern = 58; % number of features, CHANGE!!
-Nfeatoli = 111;
-Nfeats = Nfeatoli + Nfeatfern;
-Ndet = 5;
 
+% Find recordings
+cd([mainpath 'preparation' slashchar])
+filename = [dbpath 'REFERENCE-v2.csv'];
+delimiter = ',';
+formatSpec = '%q%q%[^\n\r]';
+fileID = fopen(filename,'r');
+dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
+fls = dataArray{1};
+ann = char(dataArray{2});
+% Output log
+% diary('log.txt')
+% diary on
+clear dataArray delimiter filename formatSpec
 %% Close the text file.
-load('/data/PostDoc/scripts/cinc2017-python/preparation/augmented/python_val.mat')
-load('/data/PostDoc/scripts/cinc2017-python/preparation/augmented/python_mixed2.mat')
-aug2 = [testset;mixedset];
-ann = [test_target;mixed_target];
-aug2 = aug2(1:12804,:);
-ann = ann(1:12804,:);
-
-clear testset mixedset test_target mixed_target
-tab_output = cell(size(aug2,1),Nfeats);
+fclose(fileID);
+tab_output = cell(length(fls),179);
+tab_output(:,1:2) = [fls cellstr(ann)];
 % persistent allfeats
 fs = 300;
 
@@ -46,18 +52,17 @@ d_bp= design(fdesign.bandpass('N,F3dB1,F3dB2',Nbut,Fhigh,Flow,fs),'butter');
 [b_bp2,a_bp2] = tf(d_bp);
 
 clear Fhigh Flow Nbut d_bp
-allfeats = cell2table(cell(0,Nfeats+2));
+allfeats = cell2table(cell(0,179));
 % Run through files
 
-for f = 1:size(aug2,1)
-    %% Loading data    
-    signal = aug2(f,1:(find(aug2(f,:) ~= 0, 1, 'last')));
-    fname = ['AUG' num2str(f)];
-
-
+for f = 1:length(fls)           
+    %% Loading data
+    data = myLoadData([dbpath fls{f} '.mat']);
+    fname = fls{f};
+    signal = data.val;
     if size(signal,1)<size(signal,2), signal = signal'; end
-    WINSIZE = length(signal); % window size (in sec)
-    signalraw =  signal;
+    signalraw =  signal;    
+    
     %% Preprocessing
     signal = filtfilt(b_bp,a_bp,signal);             % filtering narrow
     signal = detrend(signal);                        % detrending (optional)
@@ -66,9 +71,18 @@ for f = 1:size(aug2,1)
     signalraw = filtfilt(b_bp2,a_bp2,signalraw);     % filtering wide
     signalraw = detrend(signalraw);                  % detrending (optional)
     signalraw = signalraw - mean(signalraw);
-    signalraw = signalraw/std(signalraw);        % standardizing
+    signal_narrow = signalraw/std(signalraw);        % standardizing
     disp(['Preprocessed ' fname '...'])
-        
+    
+    if useSegments==1
+        WINSIZE = windowSize; % window size (in sec)
+        OLAP = percentageOverlap;
+    else
+        WINSIZE = length(signal)/fs;
+        OLAP=0;
+    end
+    
+     
     startp = 1;
     endp = WINSIZE*fs;
     looptrue = true;
@@ -104,10 +118,10 @@ for f = 1:size(aug2,1)
         % QRS detect
         [qrsseg,featqrs] = multi_qrsdetect(sig_seg,fs,[fname '_s' num2str(n)]);
         
-        % Oliver features
+        % HRV features
         if length(qrsseg{end})>5 % if too few detections, returns zeros
             try
-                feat_basic=oliver_features(sig_seg,qrsseg{end}./fs,fs);
+                feat_basic=HRV_features(sig_seg,qrsseg{end}./fs,fs);
                 feats_poincare = get_poincare(qrsseg{end}./fs,fs);
                 %feat_vollmer = get_vollmer(qrsseg{end},fs);
                 feat_oli = [feat_basic, feats_poincare];
@@ -121,7 +135,7 @@ for f = 1:size(aug2,1)
             feat_oli = zeros(1,Nfeatoli);
         end
         
-        % Fernando features
+        % Heart Rate features
         HRbpm = median(60./(diff(qrsseg{end})));
         %obvious cases: tachycardia ( > 100 beats per minute (bpm) in adults)
         feat_tachy = normcdf(HRbpm,120,20); % sampling from normal CDF
@@ -150,31 +164,13 @@ for f = 1:size(aug2,1)
     end
     thisfeats = array2table([repmat(f,nseg,1),[1:nseg]',cell2mat(fetbag')]);%#ok<NBRAK>
     allfeats = [allfeats;thisfeats];
-    
-    
-    
-    
-    %     % Print figures
-    %     figure(f)
-    %     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0 1 1]);
-    %     subplot(2,1,1)
-    %     plot(signal)
-    %     title({['Rec: ' fname] ; ['Label: ' ann(f)]},'Interpreter','none');
-    %     hold on
-    %     plot(qrs{end-1},signal(qrs{end-1}),'xb')
-    %     plot(qrs{end},signal(qrs{end}),'or')
-    %     subplot(2,1,2)
-    %     plot(qrs{end}(2:end),diff(qrs{end})*1000/fs)
-    %     ylabel('RR intervals (ms)')
-    %     ylim([250 1300])
-    %     saveas(gcf,[mainpath 'plots/' fls{f} '.jpg']);
-    %     close
+
 end
 delete('gqrsdet*.*')
 % diary off
 %% Saving Output
 names = {'rec_number' 'seg_number' 'sample_AFEv' 'meanRR' 'medianRR' 'SDNN' 'RMSSD' 'SDSD' 'NN50' 'pNN50' 'LFpeak' 'HFpeak' 'totalpower' 'LFpower' ...
-    'HFpower' 'nLF' 'nHF' 'LFHF' 'PoincareSD1' 'PoincareSD2'  ...
+    'HFpower' 'nLF' 'nHF' 'LFHF' 'PoincareSD1' 'PoincareSD2' 'Sample Entropy' 'Approximate Entropy'  ...
     'RR' 'DET' 'ENTR' 'L' 'TKEO1'  'DAFa2' 'LZ' ...
     'Clvl1' 'Clvl2' 'Clvl3' 'Clvl4' 'Clvl5' 'Clvl6' 'Clvl7' 'Clvl8' 'Clvl9' ...
     'Clvl10' 'Dlvl1' 'Dlvl2' 'Dlvl3' 'Dlvl4' ...
@@ -187,45 +183,17 @@ names = {'rec_number' 'seg_number' 'sample_AFEv' 'meanRR' 'medianRR' 'SDNN' 'RMS
     'Xcent' 'Ycent' 'rad1' 'rad2' 'rad1rad2' 'theta' 'NoClust1' 'NoClust2' 'NoClust3' 'NoClust4' 'NoClust5' 'NoClust6' 'NoClust7'};
 names = [names 'gentemp' 'numect' 'amp_varsqi' 'amp_stdsqi' 'amp_mean'];
 names = [names 'tachy' 'brady' 'stdsqi' 'ksqi' 'ssqi' 'psqi'];
-combs = nchoosek(1:Ndet,2);
+combs = nchoosek(1:5,2);
 combs = num2cell(combs,2);
 names = [names cellfun(@(x) strtrim(['bsqi_',num2str(x(1)) num2str(x(2))]),combs,'UniformOutput',false)'];
-names = [names arrayfun(@(x) strtrim(['rsqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
-names = [names arrayfun(@(x) strtrim(['csqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
-names = [names arrayfun(@(x) strtrim(['xsqi_',num2str(x)]),1:Ndet,'UniformOutput',false)];
+names = [names arrayfun(@(x) strtrim(['rsqi_',num2str(x)]),1:5,'UniformOutput',false)];
+names = [names arrayfun(@(x) strtrim(['csqi_',num2str(x)]),1:5,'UniformOutput',false)];
+names = [names arrayfun(@(x) strtrim(['xsqi_',num2str(x)]),1:5,'UniformOutput',false)];
 names = [names 'res1' 'res2' 'res3' 'res4' 'res5'];
 names = [names 'QRSheight','QRSwidth','QRSpow','noPwave','Pheight','Pwidth','Ppow','Theight',...
     'Twidth','Tpow','Theightnorm','Pheightnorm','Prelpow','PTrelpow','Trelpow','QTlen','PRlen'];
-allfeats.Properties.VariableNames = names;
-save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) 'mixed.mat'],'allfeats','ann');
+allfeats.Properties.VariableNames = names;    
+    
+save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) '.mat'],'allfeats','ann');
 
-% %% Save as CSV
-% tab_output(:,3:end)=num2cell(allfeats);
-% tab_output = table(tab_output);
-% tab_output.Properties.VariableNames = ['Record' 'Reference' names];
-% writetable(tab_output,[spath append 'allfeaturesOliver.csv'])
-%% Classifying using new features
-
-% T = array2table(feats,'VariableNames',names);
-% T.Annotation = ann;
-% Tsel = T(:,[1,2,5,11,17,24,38,45,58,64,72,78,83,100,107,108,113,123,136,137,147,154,156,163,169,175,176]);
-
-
-% %% Generating scores
-% [AA,lab] = confusionmat(ann,estimated); % create confusion matrix
-% F1 = zeros(1,4);
-% for i = 1:4
-%     F1(i)=2*AA(i,i)/(sum(AA(i,:))+sum(AA(:,i)));
-%     fprintf('F1 measure for %s rhythm: %1.4f \n',lab(i),F1(i))
-% end
-% fprintf('Final F1 measure:  %1.4f\n',mean(F1))
-
-
-% end
-% % loads data in parfor loop
-% function myData = myLoadData(fname)
-%
-% myData = load(fname);
-%
-%
-% end
+  
