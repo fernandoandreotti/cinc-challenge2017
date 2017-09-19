@@ -1,20 +1,10 @@
 %for OLAP = 0.7:0.1:0.9
 OLAP = 0.8;
 % function challenge_new
-% Defining path (for windows and linux)
-slashchar = char('/'*isunix + '\'*(~isunix));
-mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
-addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
-
-dbpath =  [mainpath slashchar 'preparation' slashchar 'training2017' slashchar];
-if isunix
-    spath = '~/Dropbox/PhysioChallenge2017/Features/'; % saving path
-else
-    spath = dbpath;
-end
 
 %% Parameters
-WINSIZE = 10; % window size (in sec)
+if WIN==1
+    WINSIZE = 10; % window size (in sec)
 Nfeatfern = 58; % number of features, CHANGE!!
 Nfeatoli = 113;
 Nfeats = Nfeatoli + Nfeatfern;
@@ -189,7 +179,8 @@ names = [names 'res1' 'res2' 'res3' 'res4' 'res5'];
 names = [names 'QRSheight','QRSwidth','QRSpow','noPwave','Pheight','Pwidth','Ppow','Theight',...
     'Twidth','Tpow','Theightnorm','Pheightnorm','Prelpow','PTrelpow','Trelpow','QTlen','PRlen'];
 allfeats.Properties.VariableNames = names;    
-    
+
+spath = pwd;
 save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) '.mat'],'allfeats','ann');
 
   

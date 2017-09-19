@@ -1,25 +1,19 @@
 function feat=get_poincare(QRS,fs)
 
 i=1;
-% Set the bins for the histogram (Chosen randomly at the moment)
+% Set the bins for the histogram
 edges{1}=0:100:2000;     % <----------- SET BINS
 edges{2}=-1000:100:1000; % <----------- SET BINS
 
 % Get the RR interval series from the QRS detection
 RR=diff(QRS./fs)*1000;
 
-% If there are less than 5 r peak, enter NaN instead of finding
+% If there are less than 5 r peaks, enter NaN instead of finding
 % histogram
 
 % Find the difference in RR interval series
 dRR=diff(RR);
 
-%         Plot the points (RR against dRR)
-%             figure
-%             plot(RR(2:end),dRR,'k.')
-%             xlim([200 1600])
-%             ylim([-500 900])
-%             title(txt(i,2))
 RR2=RR(2:end);
 X=[RR2,dRR];
 
@@ -27,14 +21,12 @@ x_mid=median(RR2);
 y_mid=median(dRR);
 
 r=[50,100,200,300]; % <--------- SET NUMBER AND VALUES OF RADIUS (IF >4 CHANGE ALL FEATURE INDICES)
-for j=1:4
-    [xc1,yc1]=circle(x_mid,y_mid,r(j),0.01);
-    %             hold on
-    %             plot(xc1,yc1)
+for j=1:4    
+    ang=0:0.01:2*pi; 
+    xc1=r(j)*cos(ang)+x_mid;
+    yc1=r(j)*sin(ang)+y_mid;   
     
     in = inpolygon(RR2,dRR,xc1,yc1);
-    %             hold on
-    %             plot(RR2(in),dRR(in),'r.')
     
     % Features 1-4: Percentage of points inside circle (centred on median)
     feat(i,j)=sum(in)/length(in);
@@ -44,10 +36,6 @@ feat(i,5)=x_mid;
 feat(i,6)=y_mid;
 feat(i,7)=iqr(RR2);
 feat(i,8)=iqr(dRR);
-
-% Plot the histogram
-%             figure
-%             hist3(X,'Edges',edges)
 
 [N,~]=hist3(X,'Edges',edges);
 [N2,~]=hist3([x_mid,y_mid],'Edges',edges);
@@ -78,8 +66,6 @@ feat(i,19)=sum(sum(M>0))/sum(RR);
 feat(i,20)=sum(sum(M>1))/sum(RR);
 
 k = boundary(RR2,dRR);
-%         hold on
-%         plot(RR2(k),dRR(k))
 
 A = polyarea(RR2(k),dRR(k));
 % Features 21-23: Minimum area enclosing all points (normalised)
@@ -94,7 +80,6 @@ A2 = polyarea(RR2(k2),dRR(k2));
 feat(i,24)=A2;
 feat(i,25)=A2/length(RR);
 feat(i,26)=A2/sum(RR);
-
 
 % Features 27-29: Perimeter of minimum area
 feat(i,27)=sqrt(sum(diff(RR2(k)).^2+diff(dRR(k)).^2));
@@ -111,7 +96,6 @@ feat(i,33)=mean(sqrt((RR2-x_mid).^2+(dRR-y_mid).^2));
 feat(i,34)=feat(i,33)/length(RR);
 feat(i,35)=feat(i,33)/sum(RR);
 
-
 B = bsxfun(@minus,X(:,1)',X(:,1)) + ...
     bsxfun(@minus,X(:,2)',X(:,2));
 B=B.^2;
@@ -127,7 +111,6 @@ feat(i,39)=sqrt(sum(diff(RR2).^2+diff(dRR).^2));
 feat(i,40)=feat(i,39)/length(RR);
 feat(i,41)=feat(i,39)/sum(RR);
 
-
 [idx,Cent,sumd] = kmeans(X,4);
 Dist=pdist(Cent);
 
@@ -142,13 +125,14 @@ vertA2=[RR2(k2),dRR(k2)];
 DistA2=pdist(vertA2);
 % Features 47-49: Area major minor axes
 feat(i,47)=max(DistA2);
-%     feat(i,48)=min(DistA2);
-%     feat(i,49)=min(DistA2)/max(DistA2);
 
 % Features 50-55: Smaller percentage in circle (for other rhythms)
 r2=[3,5,10,20,30,40]; % <--------- SET NUMBER AND VALUES OF RADIUS (IF >4 CHANGE ALL FEATURE INDICES)
 for j=1:6
-    [xc1,yc1]=circle(x_mid,y_mid,r2(j),0.01);
+    ang=0:0.01:2*pi;
+    xc1=r2(j)*cos(ang)+x_mid;
+    yc1=r2(j)*sin(ang)+y_mid;
+    
     in = inpolygon(RR2,dRR,xc1,yc1);
     feat(i,47+j)=sum(in)/length(in);
 end
@@ -167,21 +151,6 @@ feat(i,56)=r1;
 feat(i,57)=r2;
 feat(i,58)=r1/r2;
 feat(i,59)=theta;
-%     figure
-%     plot(RR2,dRR,'k.')
-%     hold on
-%     ang=[-0.03:0.01:2*pi];
-%     x=r1*cos(ang);
-%     y=r2*sin(ang);
-%     x0=c(1);
-%     y0=c(2);
-%     X=cos(theta)*x-sin(theta)*y;
-%     Y=sin(theta)*x+cos(theta)*y;
-%     X=X+x0;
-%     Y=Y+y0;
-%     plot(X,Y)
-%     hold on
-%     plot(Cent(:,1),Cent(:,2),'rx')
 
 % features 62-68: Number of clusters
 thresh_dist=[100,200,300,400,500,750,1000];

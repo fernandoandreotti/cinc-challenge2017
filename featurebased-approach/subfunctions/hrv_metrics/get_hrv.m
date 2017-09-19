@@ -1,4 +1,4 @@
-function HRV=get_hrv(hrv_now)% Oliver Carr - 22/06/2015
+function HRV=get_hrv(hrv_now)
 % Loads QRS peak detector location file and calculates all heart rate
 % variability features (HRV).
 
@@ -28,6 +28,24 @@ function HRV=get_hrv(hrv_now)% Oliver Carr - 22/06/2015
 %      HF_power_norm: Percentage of low and high frequency power in the
 %                     high frequency range
 %        LF_HF_ratio: Ratio of low to high frequency power
+%
+% Non-linear features
+%                SD1: Standard deviation in y=-x direction of Poincare plot
+%                SD2: Standard deviation in y=x direction of Poincare plot
+%               saen: Sample Entropy
+%               apen: Approximate Entropy
+
+%            Recurrence Quantification Analysis 
+%                 RR: Recurrence Rate
+%                Det: Determinism
+%               ENTR: Shannon Entropy
+%                  L: Average diagonal line length
+%
+%               TKEO: Mean Teager-Kaiser Energy Operator%   
+%             DFA_a2: Detrended Fluctuation Analysis Exponent%                 
+%                 LZ: Lempel Ziv Complexity
+
+
 
 % load QRS time data
 
@@ -71,8 +89,6 @@ HRV.pNN50=HRV.NN50/length(NN_int_sec);
 % Power SPectral Density analysis ***** FOR UNEVEN TIME SPACING??? *****
 if length(NN_mat(:,2))>3
 [Pxx,F]=plomb(NN_mat(:,2)./1000-mean(NN_mat(:,2)./1000),NN_mat(:,1)./1000,0.001:0.001:0.7);
-
-
 
 [~,vlow_index]=min(abs(F-vlow_thresh));
 [~,low_index]=min(abs(F-low_thresh));
@@ -132,17 +148,15 @@ end
 HRV.SD1=sqrt(var(((1/sqrt(2))*hrv_now(1:end-1,2))-((1/sqrt(2))*hrv_now(2:end,2))));
 HRV.SD2=sqrt(abs((2*std(hrv_now(:,2))^2)-HRV.SD1^2));
 
-% if length(hrv_now(:,2))<5
-%     HRV.saen=NaN;
-%     HRV.apen=NaN;
-% else
-%     HRV.saen = SampEn( 2, 0.2*std(hrv_now(:,2)), hrv_now(:,2) );
-%     HRV.apen = ApEn( 2, 0.2*std(hrv_now(:,2)), hrv_now(:,2), 1);
-% end
+if length(hrv_now(:,2))<5
+    HRV.saen=NaN;
+    HRV.apen=NaN;
+else
+    HRV.saen = SampEn( 2, 0.2*std(hrv_now(:,2)), hrv_now(:,2) );
+    HRV.apen = ApEn( 2, 0.2*std(hrv_now(:,2)), hrv_now(:,2), 1);
+end
 
-% HRV.COSEn=HRV.saen-log(2*30)-log(HRV.mRR);
-
-[RP,DD] = RPplot(hrv_now(:,2)',3,1,0.5,0);
+[RP,~] = RPplot(hrv_now(:,2)',3,1,0.5,0);
 [RR1,DET1,ENTR1,L1] = Recu_RQA(RP,0);
 
 HRV.RR=RR1; % Recurrence Rate
@@ -154,10 +168,8 @@ HRV.L=L1; %Average diagonal line length
 HRV.TKEO=mean(TKEO(hrv_now(:,2)));
 
 % Detrended Fluctuation Analysis
-% [D,alpha1]=DFA_main_a1(hrv_now(:,2)');
 [~,alpha2]=DFA_main_a2(hrv_now(:,2)');
 
-% HRV.DFA_a1=alpha1;
 HRV.DFA_a2=alpha2;
 
 % Lempel Ziv Complexity
@@ -171,9 +183,6 @@ else
 HRV.LZ=C;
 end
 
-% Triangular Index
-% h=histogram(hrv_now(:,2),30);
-% HRV.TriIn=max(h.Values)*diff(h.BinLimits);
 
 
 
