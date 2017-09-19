@@ -225,39 +225,40 @@ def ResNet_model(WINDOW_SIZE):
     x = BatchNormalization()(x)
     x = Activation('relu')(x) 
     x = Flatten()(x)
-    x = Dense(1000)(x)
+    #x = Dense(1000)(x)
     out = Dense(OUTPUT_CLASS, activation='softmax')(x)
     model = Model(inputs=input1, outputs=out)
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
-    model.summary()
-    sequential_model_to_ascii_printout(model)
-    plot_model(model, to_file='model.png')
+    #model.summary()
+    #sequential_model_to_ascii_printout(model)
+    #plot_model(model, to_file='model.png')
     return model
 
 ###########################################################
 ## Function to perform K-fold Crossvalidation on model  ##
 ##########################################################
-def model_eval(X_train,y_train,model):
-    batch =64
+def model_eval(X_train,y_train):
+    batch =32
     epochs = 20  
     classes = ['A', 'N', 'O', '~']
     Kfold = 5
     Nsamp = 1705;
         
-    cvconfusion = np.zeros((4,4,Kfold))
+    cvconfusion = np.zeros((4,4,epochs))
     cvscores = []    
     for k in range(Kfold):
+        print("Cross-validation run %d"%(k+1))
         callbacks = [
             # Early stopping definition
             EarlyStopping(monitor='val_loss', patience=3, verbose=1),
             # Decrease learning rate by 0.1 factor
             AdvancedLearnignRateScheduler(monitor='val_loss', patience=1,verbose=1, mode='auto', decayRatio=0.1),            
             # Saving best model
-            ModelCheckpoint('ResNetmodel_{}.hdf5'.format(k), monitor='val_loss', save_best_only=True, verbose=1),
+            ModelCheckpoint('weights-best_{}.hdf5'.format(k), monitor='val_loss', save_best_only=True, verbose=1),
             ]
-        print("Cross-validation run %d"%(k+1))
+        model = ResNet_model(WINDOW_SIZE)
         idxval = np.random.choice(8528, Nsamp,replace=False)
         idxtrain = np.invert(np.in1d(range(X_train.shape[0]),idxval))
         # Remove noise segments from training set
@@ -287,9 +288,14 @@ def model_eval(X_train,y_train,model):
         config.gpu_options.allow_growth=True            
         sess = tf.Session(config=config)
         K.set_session(sess)
-
-    scipy.io.savemat('ResNetconfusion.mat',mdict={'cvconfusion': cvconfusion.tolist()})  
-   
+        
+    scipy.io.savemat('CNNfinal3d.mat',mdict={'cvconfusion': cvconfusion.tolist()})  
+    ''' 
+    # Train using whole data
+    epochs = 20
+    model = get_model() # reset model
+    model.fit(X_train, y_train, epochs=epochs, batch_size=batch)
+    '''
     return model
 
 ###########################
@@ -336,8 +342,7 @@ N_INPUT = 1
 
 
 (X_train,y_train) = loaddata(N_INPUT,WINDOW_SIZE)
-model = ResNet_model(WINDOW_SIZE)
-model = model_eval(X_train,y_train,model)
+model = model_eval(X_train,y_train)
 matfile = scipy.io.loadmat('CNNfinal3d.mat')
 cv = matfile['cvconfusion']
 cv = cv[:,:,0:5]
