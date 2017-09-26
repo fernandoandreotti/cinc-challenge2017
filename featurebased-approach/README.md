@@ -6,8 +6,13 @@ This approach makes use of several previously described heart rate variability m
 
 This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for Matlab/Octave v0.99](https://physionet.org/physiotools/matlab/wfdb-app-matlab/) as the only dependency. Please refer to the toolbox's website for howto install.
 
+## Getting started
 
-## Signal Processing
+`function()` does this
+`function2()` does that
+
+
+## Description of approach
 
 Signal processing chain is divided in the following stages:
 
