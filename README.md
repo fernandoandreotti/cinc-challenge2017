@@ -17,7 +17,7 @@ Two methodologies are proposed and described in distict forlder within this repo
 * Deep Convolutional Network Approach in Python (`deeplearn-approach` folder)
 
 
-# Downloading Challenge data
+## Downloading Challenge data
 
 For downloading the challenge using `wget` in Linux or Mac use:
 
@@ -29,10 +29,10 @@ cd ..; cp -R physionet.org/training/* training/
 rm -R physionet.org
 ```
 
-# Acknowledgment
+## Acknowledgment
 All authors are affilated at the Institute of Biomedical Engineering, Department of Engineering Science, University of Oxford.
 
-# References
+## References
 
 When using this code, please cite [1].
 
