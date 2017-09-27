@@ -36,34 +36,19 @@ For more information visit: https://github.com/fernandoandreotti/cinc-challenge2
 
 
 import scipy.io
-import os
 import numpy as np
-from keras.models import load_model
 import glob
 
 # Parameters
 FS = 300
-maxlen = 30*FS
-classes = ['A', 'N', 'O']
+WINDOW_SIZE = 30*FS
 
 ## Searching files
-dataDir = '/sharedfolder/validation/'
+dataDir = '/some_path/' # <---- change!!
+
 files = sorted(glob.glob(dataDir+"*.mat"))
-print("Running classification on {} records".format(len(files)))
-answermat = np.chararray((len(files),1))
-probmat = np.zeros((len(files),3))
-## Loading model
-print("Loading model")    
-model = load_model('CNNnoiseless.h5')
 
-
-## Main Loop
-try:
-    os.remove('answers.txt')
-except OSError:
-    pass
-
-count = 0
+trainset = np.zeros((len(files),WINDOW_SIZE))
 for f in files:
     record = f[:-4]
     record = record[-6:]
@@ -72,27 +57,11 @@ for f in files:
     print('Loading record {}'.format(record))    
     data = mat_data['val']
     # Preprocessing
-    print('Preprocessing record {}'.format(record))   
-    X = np.zeros((1,maxlen))
+    print('Preprocessing record {}'.format(record))       
     data = np.nan_to_num(data) # removing NaNs and Infs
-    data = data[0,0:maxlen]
+    data = data[0,0:WINDOW_SIZE]
     data = data - np.mean(data)
     data = data/np.std(data)
-    X[0,:len(data)] = data.T # padding sequence
-    data = X
-    data = np.expand_dims(data, axis=2) # required by Keras
-    del X
-    # Classifying
-    print("Applying model ..")    
-    prob = model.predict(data)
-    ann = np.argmax(prob)
-    print("Record {} classified as {} with {:3.1f}% certainty".format(record,classes[ann],100*prob[0,ann]))
-    answermat[count] = classes[ann]
-    #probmat[count] = prob[0,0:4]
-    # Write result to answers.txt
-    answers_file = open("answers.txt", "a")
-    answers_file.write("%s,%s\n" % (record, classes[ann]))
-    answers_file.close()
-    count += 1
+    trainset[f,:len(data)] = data.T # padding sequence
     
 #scipy.io.savemat('CNNresults.mat',mdict={'labels': answermat,'probs': probmat})
