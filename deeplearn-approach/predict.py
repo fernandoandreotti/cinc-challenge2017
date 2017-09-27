@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-''''
+'''
 This function loads one random recording from CinC Challenge and use pre-trained model in predicting what it is using Residual Networks
 
 For more information visit: https://github.com/fernandoandreotti/cinc-challenge2017
@@ -31,7 +31,7 @@ For more information visit: https://github.com/fernandoandreotti/cinc-challenge2
  
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-''''
+'''
 
 
 # Download some random waveform from challenge database
