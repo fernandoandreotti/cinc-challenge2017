@@ -3,6 +3,7 @@
 
 Residual Networks (ResNet) [3] are an architecture of CNNs that have produced excelent results in computer vision. Recently, Rajpurkar _et al._ [4] applied a 34-layer ResNet (very similar to the one proposed by [3]) to classify 30-s single lead ECGs segments into 14 different classes. This network is reproduced in this work, implemented using Keras framework with Tensorflow as backend.
 
+
 ## Dependencies
 
 The following packages were used to match the Challenge Sandbox environment:
@@ -36,7 +37,12 @@ Then the following line will start the Jupyter notebook on the Docker and give y
 
     jupyter notebook --ip=0.0.0.0 --no-browser 
     
-    
+
+## Getting started
+
+- `ResNet_30s_34lay_16conv.hdf5` Pre-trained model in HDF5 format. This model is a version of our best performing entry at CinC Challenge 2017. Contains 34 layers (as described by [3]) but 16*k convolutional filters for layer, increasing k every 4th loop. Expects as input 30s ECG long segments.
+- `predict.py` loads one recording from CinC Challenge and use pre-trained model
+- `train_model.py` function used for training and cross-validating model using. The database is not included in this repo, please download the CinC Challenge database and truncate/pad data into a NxM matrix array, being N the number of recordings and M the window accepted by the network (i.e. 30 seconds). 
     
 # References
 

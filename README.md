@@ -11,12 +11,11 @@ This repository contains the solution to the CinC Challenge 2017 by [1], present
 | ~ | noise segment |
 
 
-Two methodologies are proposed and are available on distict forlder in this repo:
+Two methodologies are proposed and described in distict forlder within this repo:
 
 * Classic feature-based MATLAB approach (`featurebased-approach` folder)
 * Deep Convolutional Network Approach in Python (`deeplearn-approach` folder)
 
-# Installing
 
 # Downloading Challenge data
 
@@ -29,8 +28,6 @@ find . -name \*.mat -exec cp {} training/ \;
 cd ..; cp -R physionet.org/training/* training/
 rm -R physionet.org
 ```
-
-
 
 # Acknowledgment
 All authors are affilated at the Institute of Biomedical Engineering, Department of Engineering Science, University of Oxford.
