@@ -69,20 +69,20 @@ del X
 print("Loading model")    
 from keras.models import load_model
 model = load_model('ResNet_30s_34lay_16conv.hdf5')
+
 print("Applying model ..")    
 prob = model.predict(data)
 ann = np.argmax(prob)
 print("Record {} classified as {} with {:3.1f}% certainty".format(record,classes[ann],100*prob[0,ann]))
 
-# Visualising output of 1D convolutions
+# Visualising output of first 16 convolutions for some layers
 from keras import backend as K
 import matplotlib.pyplot as plt
-
 plt.plot(data[0,0:1000,0],)
+plt.title('Input signal')
 #plt.savefig('layinput.eps', format='eps', dpi=1000) # saving?
 
-
-for l in range(2):#range(1,33):
+for l in range(1,34):#range(1,34):
     Np = 1000
     ## Example of plotting first layer output
     layer_name = 'conv1d_{}'.format(l)
@@ -95,12 +95,13 @@ for l in range(2):#range(1,33):
                                    [layer_output])
     filtout = get_layer_output([data,0])[0]
     Npnew = int(Np*filtout.shape[1]/data.shape[1])
-    fig, ax = plt.subplots(nrows=4, ncols=4, sharex='col', sharey='row')
+    fig, ax = plt.subplots(nrows=4, ncols=4, sharex='col', sharey='row')    
     count = 0
     for row in ax:
         for col in row:
             col.plot(range(Npnew), filtout[0,0:Npnew,count],linewidth=1.0,color='olive')
             count += 1
+    plt.suptitle('Layer {}'.format(l))
     #plt.savefig('layoutput{}.eps'.format(l), format='eps', dpi=1000) # saving?
             
 
