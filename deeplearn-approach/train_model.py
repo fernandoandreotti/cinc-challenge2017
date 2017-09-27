@@ -13,7 +13,6 @@ import keras
 from keras.models import Model
 from keras.layers import Input, Conv1D, Dense, Flatten, Dropout,MaxPooling1D, Activation, BatchNormalization
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras_sequential_ascii import sequential_model_to_ascii_printout
 from keras.utils import plot_model
 from keras import backend as K
 from keras.callbacks import Callback,warnings
@@ -22,8 +21,7 @@ from keras.callbacks import Callback,warnings
 ###################################################################
 ### Callback method for reducing learning rate during training  ###
 ###################################################################
-class AdvancedLearnignRateScheduler(Callback):
-    
+class AdvancedLearnignRateScheduler(Callback):    
     '''
    # Arguments
        monitor: quantity to be monitored.
@@ -123,7 +121,7 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-
+    plt.savefig('confusion.eps', format='eps', dpi=1000)
 
 
 #####################################
@@ -138,7 +136,7 @@ def ResNet_model(WINDOW_SIZE):
 
     k = 1    # increment every 4th residual block
     p = True # pool toggle every other residual block (end with 2^8)
-    convfilt = 64
+    convfilt = 16
     convstr = 1
     ksize = 16
     poolsize = 2
@@ -153,18 +151,16 @@ def ResNet_model(WINDOW_SIZE):
     x = Conv1D(filters=convfilt,
                kernel_size=ksize,
                padding='same',
-               strides=convstr)(input1)            
-    x = BatchNormalization()(x)    
+               strides=convstr)(input1)                
     x = Activation('relu')(x)  
-    
+    x = BatchNormalization()(x)        
     
     ## Second convolutional block (conv, BN, relu, dropout, conv) with residual net
     # Left branch (convolutions)
     x1 =  Conv1D(filters=convfilt,
                kernel_size=ksize,
                padding='same',
-               strides=convstr)(x)  
-    x1 = BatchNormalization()(x1)    
+               strides=convstr)(x)      
     x1 = Activation('relu')(x1)
     x1 = BatchNormalization()(x1)    
     x1 = Dropout(drop)(x1)
@@ -192,14 +188,14 @@ def ResNet_model(WINDOW_SIZE):
         else:
             xshort = x        
         # Left branch (convolutions)
-        # notice the ordering of the operations has changed
+        # notice the ordering of the operations has changed        
         x1 = BatchNormalization()(x)
         x1 = Activation('relu')(x1)
         x1 = Dropout(drop)(x1)
         x1 =  Conv1D(filters=convfilt*k,
                kernel_size=ksize,
                padding='same',
-               strides=convstr)(x1)
+               strides=convstr)(x1)        
         x1 = BatchNormalization()(x1)
         x1 = Activation('relu')(x1)
         x1 = Dropout(drop)(x1)
@@ -221,10 +217,11 @@ def ResNet_model(WINDOW_SIZE):
         p = not p # toggle pooling
 
     
-    # Final bit
+    # Final bit    
     x = BatchNormalization()(x)
     x = Activation('relu')(x) 
     x = Flatten()(x)
+    #x = Dense(1000)(x)
     #x = Dense(1000)(x)
     out = Dense(OUTPUT_CLASS, activation='softmax')(x)
     model = Model(inputs=input1, outputs=out)
@@ -233,95 +230,108 @@ def ResNet_model(WINDOW_SIZE):
                   metrics=['accuracy'])
     #model.summary()
     #sequential_model_to_ascii_printout(model)
-    #plot_model(model, to_file='model.png')
+    plot_model(model, to_file='model.png')
     return model
 
 ###########################################################
 ## Function to perform K-fold Crossvalidation on model  ##
 ##########################################################
-def model_eval(X_train,y_train):
-    batch =32
+def model_eval(X,y):
+    batch =64
     epochs = 20  
-    classes = ['A', 'N', 'O', '~']
+    rep = 1         # K fold procedure can be repeated multiple times
     Kfold = 5
-    Nsamp = 1705;
-        
-    cvconfusion = np.zeros((4,4,epochs))
-    cvscores = []    
-    for k in range(Kfold):
-        print("Cross-validation run %d"%(k+1))
-        callbacks = [
-            # Early stopping definition
-            EarlyStopping(monitor='val_loss', patience=3, verbose=1),
-            # Decrease learning rate by 0.1 factor
-            AdvancedLearnignRateScheduler(monitor='val_loss', patience=1,verbose=1, mode='auto', decayRatio=0.1),            
-            # Saving best model
-            ModelCheckpoint('weights-best_{}.hdf5'.format(k), monitor='val_loss', save_best_only=True, verbose=1),
-            ]
-        model = ResNet_model(WINDOW_SIZE)
-        idxval = np.random.choice(8528, Nsamp,replace=False)
-        idxtrain = np.invert(np.in1d(range(X_train.shape[0]),idxval))
-        # Remove noise segments from training set
-        ytrainset = y_train[np.asarray(idxtrain),:]
-        Xtrainset = X_train[np.asarray(idxtrain),:,:]
-        #yclass = np.argmax(ytrainset,axis=1)
-        #ytrainset = ytrainset[np.asarray(yclass < 3),:]
-        #Xtrainset = Xtrainset[np.asarray(yclass < 3),:,:]       
-        model.fit(Xtrainset, ytrainset,
-                  validation_data=(X_train[np.asarray(idxval),:,:], y_train[np.asarray(idxval),:]),
-                  epochs=epochs, batch_size=batch,callbacks=callbacks)
-                  #epochs=epochs, batch_size=batch)
-                  
-        ypred = model.predict(X_train[np.asarray(idxval),:,:])
-        ypred = np.argmax(ypred,axis=1)
-        ytrue = np.argmax(y_train[np.asarray(idxval),:],axis=1)
-        cvconfusion[:,:,k] = confusion_matrix(ytrue, ypred)
-        F1 = np.zeros((4,1))
-        for i in range(4):
-            F1[i]=2*cvconfusion[i,i,k]/(np.sum(cvconfusion[i,:,k])+np.sum(cvconfusion[:,i,k]))
-            print("F1 measure for {} rhythm: {:1.4f}".format(classes[i],F1[i,0]))            
-        cvscores.append(np.mean(F1)* 100)
-        print("Overall F1 measure: {:1.4f}".format(np.mean(F1)))            
-        K.clear_session()
-        gc.collect()
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth=True            
-        sess = tf.Session(config=config)
-        K.set_session(sess)
-        
-    scipy.io.savemat('CNNfinal3d.mat',mdict={'cvconfusion': cvconfusion.tolist()})  
-    ''' 
-    # Train using whole data
-    epochs = 20
-    model = get_model() # reset model
-    model.fit(X_train, y_train, epochs=epochs, batch_size=batch)
-    '''
+    Ntrain = 8528 # number of recordings on training set
+    Nsamp = int(Ntrain/Kfold) # number of recordings to take as validation        
+   
+    # Need to add dimension for training
+    X = np.expand_dims(X, axis=2)
+    classes = ['A', 'N', 'O', '~']
+    Nclass = len(classes)
+    cvconfusion = np.zeros((Nclass,Nclass,Kfold*rep))
+    cvscores = []       
+    counter = 0
+    # repetitions of cross validation
+    for r in range(rep):
+        print("Rep %d"%(r+1))
+        # cross validation loop
+        for k in range(Kfold):
+            print("Cross-validation run %d"%(k+1))
+            # Callbacks definition
+            callbacks = [
+                # Early stopping definition
+                EarlyStopping(monitor='val_loss', patience=4, verbose=1),
+                # Decrease learning rate by 0.1 factor
+                AdvancedLearnignRateScheduler(monitor='val_loss', patience=2,verbose=1, mode='auto', decayRatio=0.1),            
+                # Saving best model
+                ModelCheckpoint('weights-best_k{}_r{}.hdf5'.format(k,r), monitor='val_loss', save_best_only=True, verbose=1),
+                ]
+            # Load model
+            model = ResNet_model(WINDOW_SIZE)
+            
+            # split train and validation sets
+            idxval = np.random.choice(Ntrain, Nsamp,replace=False)
+            idxtrain = np.invert(np.in1d(range(X_train.shape[0]),idxval))
+            ytrain = y[np.asarray(idxtrain),:]
+            Xtrain = X[np.asarray(idxtrain),:,:]         
+            Xval = X[np.asarray(idxval),:,:]
+            yval = y[np.asarray(idxval),:]
+            
+            # Train model
+            model.fit(Xtrain, ytrain,
+                      validation_data=(Xval, yval),
+                      epochs=epochs, batch_size=batch,callbacks=callbacks)
+            
+            # Evaluate best trained model
+            model.load_weights('weights-best_k{}_r{}.hdf5'.format(k,r))
+            ypred = model.predict(Xval)
+            ypred = np.argmax(ypred,axis=1)
+            ytrue = np.argmax(yval,axis=1)
+            cvconfusion[:,:,counter] = confusion_matrix(ytrue, ypred)
+            F1 = np.zeros((4,1))
+            for i in range(4):
+                F1[i]=2*cvconfusion[i,i,counter]/(np.sum(cvconfusion[i,:,counter])+np.sum(cvconfusion[:,i,counter]))
+                print("F1 measure for {} rhythm: {:1.4f}".format(classes[i],F1[i,0]))            
+            cvscores.append(np.mean(F1)* 100)
+            print("Overall F1 measure: {:1.4f}".format(np.mean(F1)))            
+            K.clear_session()
+            gc.collect()
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth=True            
+            sess = tf.Session(config=config)
+            K.set_session(sess)
+            counter += 1
+    # Saving cross validation results 
+    scipy.io.savemat('xval_results.mat',mdict={'cvconfusion': cvconfusion.tolist()})  
     return model
 
 ###########################
 ## Function to load data ##
 ###########################
-def loaddata(feats,WINDOW_SIZE):    
-    print("Loading data training set")    
-    matfileval = scipy.io.loadmat('/sharedfolder/preparation/augmented/train3d_val.mat')
-    matfile1 = scipy.io.loadmat('/sharedfolder/preparation/augmented/train3d_1.mat')
-    matfile2 = scipy.io.loadmat('/sharedfolder/preparation/augmented/train3d_2.mat')
-    matfile3 = scipy.io.loadmat('/sharedfolder/preparation/augmented/train3d_3.mat')
-    matfile4 = scipy.io.loadmat('/sharedfolder/preparation/augmented/train3d_4.mat')
-    mattarget = scipy.io.loadmat('/sharedfolder/preparation/augmented/train3d_target.mat') 
-       
-
-    y_train = matfileval['test_target']
-    y_train = np.concatenate((y_train,mattarget['train_target']),axis=0)
+def loaddata(WINDOW_SIZE):    
+    '''
+        Load training/test data into workspace
+        
+        This function assumes you have downloaded and padded/truncated the 
+        training set into a local file named "trainingset.mat". This file should 
+        contain the following structures:
+            - trainset: NxM matrix of N ECG segments with length M
+            - traintarget: Nx4 matrix of coded labels where each column contains
+            one in case it matches ['A', 'N', 'O', '~'].
+        
+    '''
+    print("Loading data training set")        
+    matfile = scipy.io.loadmat('trainingset.mat')
+    X = matfile['trainset']
+    y = matfile['traintarget']
     
-    X_train = matfileval['testset']
-    X_train = np.concatenate((X_train,matfile1['data1']),axis=0)
-    X_train = np.concatenate((X_train,matfile2['data2']),axis=0)
-    X_train = np.concatenate((X_train,matfile3['data3']),axis=0)        
-    X_train = np.concatenate((X_train,matfile4['data4']),axis=0)     
-    X_train = X_train[0:12804,0:WINDOW_SIZE,range(feats)]
-    y_train = y_train[0:12804,:]
-    return (X_train, y_train)
+    # Merging datasets    
+    # Case other sets are available, load them then concatenate
+    #y = np.concatenate((traintarget,augtarget),axis=0)     
+    #X = np.concatenate((trainset,augset),axis=0)     
+
+    X =  X[:,0:WINDOW_SIZE] 
+    return (X, y)
 
 
 #####################
@@ -334,26 +344,26 @@ sess = tf.Session(config=config)
 seed = 7
 np.random.seed(seed)
 
-
 # Parameters
 FS = 300
 WINDOW_SIZE = 30*FS     # padding window for CNN
-N_INPUT = 1
 
+# Loading data
+(X_train,y_train) = loaddata(WINDOW_SIZE)
 
-(X_train,y_train) = loaddata(N_INPUT,WINDOW_SIZE)
+# Training model
 model = model_eval(X_train,y_train)
-matfile = scipy.io.loadmat('CNNfinal3d.mat')
+
+# Outputing results of cross validation
+matfile = scipy.io.loadmat('xval_results.mat')
 cv = matfile['cvconfusion']
-cv = cv[:,:,0:5]
-cv = np.sum(cv,axis=2)
-cvconfusion = cv
-classes = ['A', 'N', 'O', '~']
-F1 = np.zeros((4,1))
-for i in range(4):
-    F1[i]=2*cvconfusion[i,i]/(np.sum(cvconfusion[i,:])+np.sum(cvconfusion[:,i]))
-    print("F1 measure for {} rhythm: {:1.4f}".format(classes[i],F1[i,0]))
-
-
-#model = model_finetune(model,X_test,y_test)
-#model.save('CNNfinal2.h5')
+F1mean = np.zeros(cv.shape[2])
+for j in range(50):
+    classes = ['A', 'N', 'O', '~']
+    F1 = np.zeros((4,1))
+    for i in range(4):
+        F1[i]=2*cv[i,i,j]/(np.sum(cv[i,:,j])+np.sum(cv[:,i,j]))        
+        print("F1 measure for {} rhythm: {:1.4f}".format(classes[i],F1[i,0]))
+    F1mean[j] = np.mean(F1[i,0])
+    print("mean F1 measure for: {:1.4f}".format(F1mean[j]))
+print("Overall F1 {}: {:1.4f}".format(np.mean(F1mean)))
