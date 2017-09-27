@@ -1,5 +1,5 @@
-.keras/
-.config/
-.cache/
-.ipython/
-.local/
+deeplearn-approach/.keras/
+deeplearn-approach/.config/
+deeplearn-approach/.cache/
+deeplearn-approach/.ipython/
+deeplearn-approach/.local/
