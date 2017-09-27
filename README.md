@@ -19,10 +19,11 @@ Two methodologies are proposed and described in distict forlder within this repo
 
 ## Downloading Challenge data
 
-For downloading the challenge using `wget` in a Linux machine:
+For downloading the [challenge training set](https://physionet.org/challenge/2017/training2017.zip). This can be done on Linux using:
 
 ```bash
- wget -r -np --no-parent http://www.physionet.org/physiobank/database/challenge/2017/training/ -A mat -P training/
+wget https://physionet.org/challenge/2017/training2017.zip
+unzip training2017.zip
 ```
 
 ## Acknowledgment
