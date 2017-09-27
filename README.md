@@ -22,11 +22,7 @@ Two methodologies are proposed and described in distict forlder within this repo
 For downloading the challenge using `wget` in Linux or Mac use:
 
 ```bash
-wget -r -np http://www.physionet.org/physiobank/database/challenge/2017/training/
-cd physionet.org; mkdir training
-find . -name \*.mat -exec cp {} training/ \;
-cd ..; cp -R physionet.org/training/* training/
-rm -R physionet.org
+ wget -r -np --no-parent http://www.physionet.org/physiobank/database/challenge/2017/training/ -A mat -P training/
 ```
 
 ## Acknowledgment
