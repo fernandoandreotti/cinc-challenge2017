@@ -1,12 +1,17 @@
-su#!/usr/bin/env python3
+#!/usr/bin/env python3
 
-## old one !/usr/bin/python3
-import sys
+# Download some random waveform from challenge database
+from random import randint
+import urllib.request
+record = "A{:05d}".format(randint(0, 999))
+urlfile = "https://www.physionet.org/physiobank/database/challenge/2017/training/A00/{}.mat".format(record)
+local_filename, headers = urllib.request.urlretrieve(urlfile)
+html = open(local_filename)
+print('Downloading record {} ..'.format(record))
+   
+# Load data
 import scipy.io
-record = sys.argv[1]
-
-# Read waveform samples (input is in WFDB-MAT format)
-mat_data = scipy.io.loadmat(record + ".mat")
+mat_data = scipy.io.loadmat(local_filename)
 data = mat_data['val']
 
 # Parameters
@@ -31,7 +36,7 @@ del X
 # Load and apply model
 print("Loading model")    
 from keras.models import load_model
-model = load_model('ResNetmodel.h5')
+model = load_model('ResNet_30s_34lay_16conv.hdf5')
 print("Applying model ..")    
 prob = model.predict(data)
 ann = np.argmax(prob)
