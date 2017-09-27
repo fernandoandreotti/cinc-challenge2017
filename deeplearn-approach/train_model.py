@@ -295,9 +295,9 @@ def model_eval(X,y):
             # Callbacks definition
             callbacks = [
                 # Early stopping definition
-                EarlyStopping(monitor='val_loss', patience=4, verbose=1),
+                EarlyStopping(monitor='val_loss', patience=3, verbose=1),
                 # Decrease learning rate by 0.1 factor
-                AdvancedLearnignRateScheduler(monitor='val_loss', patience=2,verbose=1, mode='auto', decayRatio=0.1),            
+                AdvancedLearnignRateScheduler(monitor='val_loss', patience=1,verbose=1, mode='auto', decayRatio=0.1),            
                 # Saving best model
                 ModelCheckpoint('weights-best_k{}_r{}.hdf5'.format(k,r), monitor='val_loss', save_best_only=True, verbose=1),
                 ]
