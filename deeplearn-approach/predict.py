@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 '''
 This function loads one random recording from CinC Challenge and use pre-trained model in predicting what it is using Residual Networks
 
@@ -75,3 +73,35 @@ print("Applying model ..")
 prob = model.predict(data)
 ann = np.argmax(prob)
 print("Record {} classified as {} with {:3.1f}% certainty".format(record,classes[ann],100*prob[0,ann]))
+
+# Visualising output of 1D convolutions
+from keras import backend as K
+import matplotlib.pyplot as plt
+
+plt.plot(data[0,0:1000,0],)
+#plt.savefig('layinput.eps', format='eps', dpi=1000) # saving?
+
+
+for l in range(2):#range(1,33):
+    Np = 1000
+    ## Example of plotting first layer output
+    layer_name = 'conv1d_{}'.format(l)
+    layer_dict = dict([(layer.name, layer) for layer in model.layers])
+    layer_output = layer_dict[layer_name].output
+    
+    # K.learning_phase() is a flag that indicates if the network is in training or
+    # predict phase. It allow layer (e.g. Dropout) to only be applied during training
+    get_layer_output = K.function([model.layers[0].input, K.learning_phase()],
+                                   [layer_output])
+    filtout = get_layer_output([data,0])[0]
+    Npnew = int(Np*filtout.shape[1]/data.shape[1])
+    fig, ax = plt.subplots(nrows=4, ncols=4, sharex='col', sharey='row')
+    count = 0
+    for row in ax:
+        for col in row:
+            col.plot(range(Npnew), filtout[0,0:Npnew,count],linewidth=1.0,color='olive')
+            count += 1
+    #plt.savefig('layoutput{}.eps'.format(l), format='eps', dpi=1000) # saving?
+            
+
+
