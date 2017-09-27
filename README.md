@@ -19,7 +19,7 @@ Two methodologies are proposed and described in distict forlder within this repo
 
 ## Downloading Challenge data
 
-For downloading the challenge using `wget` in Linux or Mac use:
+For downloading the challenge using `wget` in a Linux machine:
 
 ```bash
  wget -r -np --no-parent http://www.physionet.org/physiobank/database/challenge/2017/training/ -A mat -P training/
