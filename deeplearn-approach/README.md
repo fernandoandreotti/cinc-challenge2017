@@ -42,7 +42,7 @@ Then the following line will start the Jupyter notebook on the Docker and give y
 
 - `ResNet_30s_34lay_16conv.hdf5` Pre-trained model in HDF5 format. This model is a version of our best performing entry at CinC Challenge 2017. Contains 34 layers (as described by [3]) but 16*k convolutional filters for layer, increasing k every 4th loop. Expects as input 30s ECG long segments.
 - `predict.py` loads one recording from CinC Challenge and use pre-trained model in predicting what it is
-- `train_model.py` function used for training and cross-validating model using. The database is not included in this repo, please download the CinC Challenge database and truncate/pad data into a NxM matrix array, being N the number of recordings and M the window accepted by the network (i.e. 30 seconds). This procedure is exemplified in function `cincset_files2matrix.py`
+- `train_model.py` function used for training and cross-validating model using. The database is not included in this repo, please download the CinC Challenge database and truncate/pad data into a NxM matrix array, being N the number of recordings and M the window accepted by the network (i.e. 30 seconds). This procedure is exemplified in function __cincset_files2matrix.py__
 - `cincset_files2matrix.py` This simple function creates a NxM matrix from multiple .mat files downloaded from the CinC Challenge 2017. Target are coded in a Nx4 matrix (since there are 4 classes) as required by neural networks.
     
 # References
