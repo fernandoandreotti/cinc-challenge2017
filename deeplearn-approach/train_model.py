@@ -402,3 +402,8 @@ for j in range(50):
     F1mean[j] = np.mean(F1[i,0])
     print("mean F1 measure for: {:1.4f}".format(F1mean[j]))
 print("Overall F1 {}: {:1.4f}".format(np.mean(F1mean)))
+# Plotting confusion matrix
+cv = np.sum(cv,axis=2)
+plot_confusion_matrix(cv, classes,normalize=True,title='Confusion matrix')
+
+
