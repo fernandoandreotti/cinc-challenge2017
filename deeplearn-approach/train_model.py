@@ -52,7 +52,6 @@ from keras.utils import plot_model
 from keras import backend as K
 from keras.callbacks import Callback,warnings
 
-
 ###################################################################
 ### Callback method for reducing learning rate during training  ###
 ###################################################################
@@ -171,7 +170,7 @@ def ResNet_model(WINDOW_SIZE):
 
     k = 1    # increment every 4th residual block
     p = True # pool toggle every other residual block (end with 2^8)
-    convfilt = 16
+    convfilt = 64
     convstr = 1
     ksize = 16
     poolsize = 2
@@ -186,23 +185,26 @@ def ResNet_model(WINDOW_SIZE):
     x = Conv1D(filters=convfilt,
                kernel_size=ksize,
                padding='same',
-               strides=convstr)(input1)                
-    x = Activation('relu')(x)  
+               strides=convstr,
+               kernel_initializer='he_normal')(input1)                
     x = BatchNormalization()(x)        
+    x = Activation('relu')(x)  
     
     ## Second convolutional block (conv, BN, relu, dropout, conv) with residual net
     # Left branch (convolutions)
     x1 =  Conv1D(filters=convfilt,
                kernel_size=ksize,
                padding='same',
-               strides=convstr)(x)      
-    x1 = Activation('relu')(x1)
+               strides=convstr,
+               kernel_initializer='he_normal')(x)      
     x1 = BatchNormalization()(x1)    
+    x1 = Activation('relu')(x1)
     x1 = Dropout(drop)(x1)
     x1 =  Conv1D(filters=convfilt,
                kernel_size=ksize,
                padding='same',
-               strides=convstr)(x1)
+               strides=convstr,
+               kernel_initializer='he_normal')(x1)
     x1 = MaxPooling1D(pool_size=poolsize,
                       strides=poolstr)(x1)
     # Right branch, shortcut branch pooling
@@ -230,14 +232,16 @@ def ResNet_model(WINDOW_SIZE):
         x1 =  Conv1D(filters=convfilt*k,
                kernel_size=ksize,
                padding='same',
-               strides=convstr)(x1)        
+               strides=convstr,
+               kernel_initializer='he_normal')(x1)        
         x1 = BatchNormalization()(x1)
         x1 = Activation('relu')(x1)
         x1 = Dropout(drop)(x1)
         x1 =  Conv1D(filters=convfilt*k,
                kernel_size=ksize,
                padding='same',
-               strides=convstr)(x1)        
+               strides=convstr,
+               kernel_initializer='he_normal')(x1)        
         if p:
             x1 = MaxPooling1D(pool_size=poolsize,strides=poolstr)(x1)                
 
