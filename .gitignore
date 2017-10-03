@@ -5,4 +5,6 @@ deeplearn-approach/.ipython/
 deeplearn-approach/.local/
 deeplearn-approach/core
 deeplearn-approach/.python_history
-
+deeplearn-approach/.bash_history
+.bash_history
+.config/
