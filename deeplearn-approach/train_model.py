@@ -397,15 +397,15 @@ model = model_eval(X_train,y_train)
 matfile = scipy.io.loadmat('xval_results.mat')
 cv = matfile['cvconfusion']
 F1mean = np.zeros(cv.shape[2])
-for j in range(50):
+for j in range(cv.shape[2]):
     classes = ['A', 'N', 'O', '~']
     F1 = np.zeros((4,1))
     for i in range(4):
         F1[i]=2*cv[i,i,j]/(np.sum(cv[i,:,j])+np.sum(cv[:,i,j]))        
         print("F1 measure for {} rhythm: {:1.4f}".format(classes[i],F1[i,0]))
-    F1mean[j] = np.mean(F1[i,0])
+    F1mean[j] = np.mean(F1)
     print("mean F1 measure for: {:1.4f}".format(F1mean[j]))
-print("Overall F1 {}: {:1.4f}".format(np.mean(F1mean)))
+print("Overall F1 : {:1.4f}".format(np.mean(F1mean)))
 # Plotting confusion matrix
 cv = np.sum(cv,axis=2)
 plot_confusion_matrix(cv, classes,normalize=True,title='Confusion matrix')
