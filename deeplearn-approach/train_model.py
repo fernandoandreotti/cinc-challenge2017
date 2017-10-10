@@ -407,7 +407,12 @@ for j in range(cv.shape[2]):
     print("mean F1 measure for: {:1.4f}".format(F1mean[j]))
 print("Overall F1 : {:1.4f}".format(np.mean(F1mean)))
 # Plotting confusion matrix
-cv = np.sum(cv,axis=2)
-plot_confusion_matrix(cv, classes,normalize=True,title='Confusion matrix')
+cvsum = np.sum(cv,axis=2)
+for i in range(4):
+    F1[i]=2*cvsum[i,i]/(np.sum(cvsum[i,:])+np.sum(cvsum[:,i]))        
+    print("F1 measure for {} rhythm: {:1.4f}".format(classes[i],F1[i,0]))
+F1mean = np.mean(F1)
+print("mean F1 measure for: {:1.4f}".format(F1mean))
+plot_confusion_matrix(cvsum, classes,normalize=True,title='Confusion matrix')
 
 
