@@ -25,9 +25,11 @@ ENV CONDA_ENV_PATH /opt/miniconda
 ENV MYCONDA_ENV "deeplearn"
 ENV CONDA_ACTIVATE "source $CONDA_ENV_PATH/bin/activate $MYCONDA_ENV"
 
+# install essentials
 RUN apt-get update --fix-missing -qq \
- && apt-get install --no-install-recommends -y \
-    # install essentials
+     && apt-get install --no-install-recommends -y \
+		autoconf \
+		automake \  
 		bc \
 		build-essential \
 		bzip2 \
@@ -36,8 +38,6 @@ RUN apt-get update --fix-missing -qq \
 		g++ \
 		gfortran \
 		git \
-		mercurial \
-		subversion \
 		language-pack-en \
 		libatlas-dev \
 		libatlas3gf-base \
@@ -50,18 +50,20 @@ RUN apt-get update --fix-missing -qq \
 		libopenblas-dev \		
 		libssl-dev \
 		libtiff5-dev \
+		libtool \
 		libwebp-dev \
 		libzmq3-dev \
+		make \
 		nano \
 		pkg-config \
 		software-properties-common \
 		unzip \
-		vim \
 		wget \
 		zlib1g-dev \
 		qt5-default \
 		libvtk6-dev \
 		zlib1g-dev
+
 
 
 # Install Anaconda 4.3.1 with Python 3
@@ -86,41 +88,34 @@ RUN conda create -y --name $MYCONDA_ENV python=${PYTHON_VERSION}
 
 # Install Python 3 packages
 
-RUN conda install -c anaconda -y -n $MYCONDA_ENV numpy=1.12.0
-RUN conda install -y -n $MYCONDA_ENV\
-    'beautifulsoup4=4.5*' \
-    'bokeh=0.12*' \
-    'cloudpickle=0.2*' \
-    'cython=0.25*' \
-    'dill=0.2*' \
+RUN conda install -c conda-forge -y -n $MYCONDA_ENV\
+     'beautifulsoup4=4.5*' \
     'hdf5=1.8.17' \
-    'h5py=2.6*' \
+    'h5py=2.7*' \
     'ipython=5.1*' \	
     'ipykernel=4.5*' \
     'ipywidgets=5.2*' \
     'jupyter=1.0*' \
+    'lxml=3.8*' \
     'matplotlib=2.0*' \
-    'nose=1.3*' \
     'notebook=4.3*' \
-    'numba=0.30*' \
-    'numexpr=2.6*' \
-    'pandas=0.19*' \
-    'patsy=0.4*' \
+    'numpy=1.12*' \
+    'pandas=0.20*' \
+    'pillow=4.2*' \
     'pip=9.0*' \
     'python=3.5*' \
-    'scipy=0.18*' \
-    'scikit-learn=0.18*' \
-    'scikit-image=0.12*' \
-    'seaborn=0.7*' \
+    'rpy2=2.8*'  \
+    'scipy=0.19*' \
+    'scikit-learn=0.19*' \
+    'scikit-image=0.13*' \
+    'setuptools=36.3*' \
     'six=1.10*' \
     'sphinx=1.5*' \
-    'spyder=3.1*' \
-    'sqlalchemy=1.1*' \
-    'statsmodels=0.6*' \
-    'sympy=1.0*' \
-    'terminado=0.6' \
-    'xlrd=1.0*'  && \
+    'spyder=3.1*'  && \
     conda clean -tipsy
+
+# Some R dependencies
+RUN conda install -c conda-forge -n $MYCONDA_ENV r-r.utils r-lme4 r-nlme
 
 # Install TensorFlow
 #RUN conda install -c conda-forge -n $MYCONDA_ENV tensorflow=${TENSORFLOW_VERSION}
@@ -138,8 +133,7 @@ RUN sed -i 's/theano/tensorflow/g' ${CONDA_ENV_PATH}/envs/${MYCONDA_ENV}/etc/con
 # Visualization tools
 RUN conda install -c conda-forge -y -n $MYCONDA_ENV \
 	graphviz=2.38.0 \
-	pydotplus=2.0.2 \
-	tqdm
+	pydotplus=2.0.2
 
 
 
@@ -151,31 +145,21 @@ RUN $CONDA_ACTIVATE && pip install --upgrade pip && \
 ## Finishing up details ###
 ###########################
 
-COPY awk '{if (/^selected = spyder /) {$0=$0 "/dark"}; print}' /sharedfolder/.config/spyder-py3/spyder.ini /sharedfolder/.config/spyder-py3/spyder.ini
-
-
 ENV HOME /sharedfolder
-
-# Set up Jupyter scripts
 WORKDIR /sharedfolder
 
 # Add a notebook profile.
 RUN mkdir -p -m 700 /sharedfolder/.jupyter/ && \
-	echo "c.NotebookApp.ip = '*'" >> /sharedfolder/.jupyter/jupyter_notebook_config.py
+	echo "c.NotebookApp.ip = '*'" >> /sharedfolder/.jupyter/jupyter_notebook_config.py \
+	echo "c.NotebookApp.port = 8888" >> /sharedfolder/.jupyter/jupyter_notebook_config.py \
+	echo "c.NotebookApp.open_browser = False" >> /sharedfolder/.jupyter/jupyter_notebook_config.py \
+	echo "c.MultiKernelManager.default_kernel_name = 'python3'" >> /sharedfolder/.jupyter/jupyter_notebook_config.py \
+	echo "c.NotebookApp.allow_root = True" >> /sharedfolder/.jupyter/jupyter_notebook_config.py \
+	echo "c.NotebookApp.password_required = False" >> /sharedfolder/.jupyter/jupyter_notebook_config.py \
+	echo "c.NotebookApp.token = ''" >> /sharedfolder/.jupyter/jupyter_notebook_config.py
 
-# Set up notebook config
-COPY jupyter_notebook_config.py /sharedfolder/.jupyter/
-
-# Jupyter has issues with being run directly: https://github.com/ipython/ipython/issues/7062
-COPY run_jupyter.sh /sharedfolder/
 
 # Expose Ports for TensorBoard (6006), Ipython (8888)
 EXPOSE 6006 8888
-
-# RUN curl -sSL https://github.com/fchollet/keras/raw/master/examples/mnist_mlp.py | python # Test setup
-
-RUN ["/bin/bash", "-c","source activate deeplearn"]
-
-ENTRYPOINT ["/bin/bash", "-c"]
 
 CMD ["source activate deeplearn && /bin/bash"]
