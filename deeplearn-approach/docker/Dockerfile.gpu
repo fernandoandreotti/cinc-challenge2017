@@ -1,15 +1,15 @@
 FROM nvidia/cuda:8.0-cudnn5-devel-ubuntu14.04
 MAINTAINER Fernando Andreotti <fernando.andreotti@eng.ox.ac.uk>
 
-#RUN rm /bin/sh && ln -s /bin/bash /bin/sh # Force bash
-ENTRYPOINT ["/bin/bash", "-c" ]
 # Versions used for some packages
 ARG CONDA_VERSION=4.3.1
 ARG CONDA_ENV
 ARG TENSORFLOW_VERSION=1.0*
 ARG KERAS_VERSION=2.0.2
 ARG PYTHON_VERSION=3.5
-# tensorflow GPU version is commented out bellow
+
+
+ENTRYPOINT ["/bin/bash", "-c" ]
 
 USER root
 
@@ -63,15 +63,6 @@ RUN apt-get update --fix-missing -qq \
 		qt5-default \
 		libvtk6-dev \
 		zlib1g-dev
-
-
-
-# Install Anaconda 4.3.1 with Python 3
-#RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
-#    wget https://repo.continuum.io/archive/Anaconda3-${CONDA_VERSION}-Linux-x86_64.sh -O ~/anaconda.sh && \
-#	/bin/bash ~/anaconda.sh -b -p $CONDA_ENV_PATH && \
-#	rm ~/anaconda.sh
-	
 
 
 # Install miniconda to /opt/miniconda
