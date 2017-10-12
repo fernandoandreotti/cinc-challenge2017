@@ -74,4 +74,4 @@ for row in range(len(csvfile)):
     traintarget[row,classes.index(csvfile[row][1])] = 1
             
 # Saving both
-scipy.io.savemat('trainigset.mat',mdict={'trainset': trainset,'traintarget': traintarget})
+scipy.io.savemat('trainingset.mat',mdict={'trainset': trainset,'traintarget': traintarget})
