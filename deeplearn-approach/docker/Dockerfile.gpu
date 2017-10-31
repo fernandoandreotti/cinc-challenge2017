@@ -4,8 +4,8 @@ MAINTAINER Fernando Andreotti <fernando.andreotti@eng.ox.ac.uk>
 # Versions used for some packages
 ARG CONDA_VERSION=4.3.1
 ARG CONDA_ENV
-ARG TENSORFLOW_VERSION=1.0*
-ARG KERAS_VERSION=2.0.2
+ARG TENSORFLOW_VERSION=1.3*
+ARG KERAS_VERSION=2.0*
 ARG PYTHON_VERSION=3.5
 
 
@@ -95,18 +95,18 @@ RUN conda install -c conda-forge -y -n $MYCONDA_ENV\
     'pillow=4.2*' \
     'pip=9.0*' \
     'python=3.5*' \
-    'rpy2=2.8*'  \
     'scipy=0.19*' \
     'scikit-learn=0.19*' \
     'scikit-image=0.13*' \
     'setuptools=36.3*' \
     'six=1.10*' \
     'sphinx=1.5*' \
-    'spyder=3.1*'  && \
+    'spyder=3.2*'  && \
     conda clean -tipsy
 
-# Some R dependencies
-RUN conda install -c conda-forge -n $MYCONDA_ENV r-r.utils r-lme4 r-nlme
+# Some further python libraries
+#RUN conda install -c conda-forge -n $MYCONDA_ENV r-r.utils r-lme4 r-nlme
+RUN conda install -c glemaitre -n $MYCONDA_ENV imbalanced-learn
 
 # Install TensorFlow
 #RUN conda install -c conda-forge -n $MYCONDA_ENV tensorflow=${TENSORFLOW_VERSION}
