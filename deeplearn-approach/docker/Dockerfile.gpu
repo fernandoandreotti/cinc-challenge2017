@@ -72,8 +72,6 @@ RUN rm Miniconda-latest-Linux-x86_64.sh
 ENV PATH=$CONDA_ENV_PATH/bin:${PATH}
 RUN conda update --quiet --yes conda
 
-ENV PATH ${CONDA_ENV_PATH}/bin:$PATH
-
 # Creating Anaconda environment
 RUN conda create -y --name $MYCONDA_ENV python=${PYTHON_VERSION}
 
