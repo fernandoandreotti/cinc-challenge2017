@@ -80,7 +80,8 @@ RUN conda create -y --name $MYCONDA_ENV python=${PYTHON_VERSION}
 # Install Python 3 packages
 
 RUN conda install -c conda-forge -y -n $MYCONDA_ENV\
-     'beautifulsoup4=4.5*' \
+    'beautifulsoup4=4.5*' \
+    'graphviz=2.38.0' \
     'hdf5=1.8.17' \
     'h5py=2.7*' \
     'ipython=5.1*' \	
@@ -95,6 +96,7 @@ RUN conda install -c conda-forge -y -n $MYCONDA_ENV\
     'pillow=4.2*' \
     'pip=9.0*' \
     'python=3.5*' \
+    'pydotplus=2.0.2' \
     'scipy=0.19*' \
     'scikit-learn=0.19*' \
     'scikit-image=0.13*' \
@@ -120,13 +122,6 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 RUN conda info --envs
 RUN sed -i 's/theano/tensorflow/g' ${CONDA_ENV_PATH}/envs/${MYCONDA_ENV}/etc/conda/activate.d/keras_activate.sh # make tensorflow default 
-
-# Visualization tools
-RUN conda install -c conda-forge -y -n $MYCONDA_ENV \
-	graphviz=2.38.0 \
-	pydotplus=2.0.2
-
-
 
 RUN $CONDA_ACTIVATE && pip install --upgrade pip && \
 	pip install git+git://github.com/stared/keras-sequential-ascii.git \
