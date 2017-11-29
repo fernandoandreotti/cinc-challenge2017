@@ -1,5 +1,9 @@
-% function challenge_new
+function ExtractFeatures(dbpath,varargin)
+% This func 
+% 
+% 
 
+% Preset Inputs
 useSegments=1; % Set to 1 to segment the signals
 windowSize=10; % window size (in sec)
 percentageOverlap=0.8;
@@ -8,13 +12,6 @@ percentageOverlap=0.8;
 slashchar = char('/'*isunix + '\'*(~isunix));
 mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
 addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
-
-dbpath =  [mainpath slashchar 'preparation' slashchar 'training2017' slashchar];
-if isunix
-    spath = '~/Dropbox/PhysioChallenge2017/Features/'; % saving path
-else
-    spath = dbpath;
-end
 
 %% Parameters
 
@@ -27,9 +24,6 @@ fileID = fopen(filename,'r');
 dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
 fls = dataArray{1};
 ann = char(dataArray{2});
-% Output log
-% diary('log.txt')
-% diary on
 clear dataArray delimiter filename formatSpec
 %% Close the text file.
 fclose(fileID);
@@ -136,7 +130,7 @@ for f = 1:length(fls)
             feat_oli = zeros(1,Nfeatoli);
         end
         
-        % Fernando features
+        % Heart Rate features
         HRbpm = median(60./(diff(qrsseg{end})));
         %obvious cases: tachycardia ( > 100 beats per minute (bpm) in adults)
         feat_tachy = normcdf(HRbpm,120,20); % sampling from normal CDF

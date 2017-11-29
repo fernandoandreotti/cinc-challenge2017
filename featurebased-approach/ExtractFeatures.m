@@ -1,24 +1,29 @@
+function ExtractFeatures(dbpath,varargin)
+% This function extracts features for each record present  in a folder
+% 
+%  Input:
+%       - dbpath:         directory where database is
+%       (optional inputs)
+%           - useSegments:       segment signals into windows (bool)?
+%           - windowSize:        size of window used in segmenting record
+%           - percentageOverlap: overlap between windows
+% 
 
-useSegments=1; % Set to 1 to segment the signals
-windowSize=10; % window size (in sec)
-percentageOverlap=0.8;
+% Default arguments
+optargs = {1 10 0.8};  % default values for input arguments
+newVals = cellfun(@(x) ~isempty(x), varargin);
+optargs(newVals) = varargin(newVals);
+[useSegments, windowSize, percentageOverlap] = optargs{:};
 
-% Defining path (for windows and linux)
+% Add subfunctions to matlab path
 slashchar = char('/'*isunix + '\'*(~isunix));
 mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
 addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
 
-dbpath =  [mainpath slashchar 'preparation' slashchar 'training2017' slashchar];
-if isunix
-    spath = '~/Dropbox/PhysioChallenge2017/Features/'; % saving path
-else
-    spath = dbpath;
-end
-
-%% Parameters
 
 % Find recordings
-cd([mainpath 'preparation' slashchar])
+mkdir([dbpath 'featextract'])
+cd([dbpath 'featextract' slashchar])
 filename = [dbpath 'REFERENCE-v2.csv'];
 delimiter = ',';
 formatSpec = '%q%q%[^\n\r]';
@@ -26,9 +31,6 @@ fileID = fopen(filename,'r');
 dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
 fls = dataArray{1};
 ann = char(dataArray{2});
-% Output log
-% diary('log.txt')
-% diary on
 clear dataArray delimiter filename formatSpec
 %% Close the text file.
 fclose(fileID);
