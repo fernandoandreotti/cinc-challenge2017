@@ -1,13 +1,13 @@
 function ExtractFeatures(dbpath,varargin)
 % This function extracts features for each record present  in a folder
-% 
+%
 %  Input:
 %       - dbpath:         directory where database is
 %       (optional inputs)
 %           - useSegments:       segment signals into windows (bool)?
 %           - windowSize:        size of window used in segmenting record
 %           - percentageOverlap: overlap between windows
-% 
+%
 
 % Default arguments
 slashchar = char('/'*isunix + '\'*(~isunix));
@@ -21,7 +21,9 @@ optargs(newVals) = varargin(newVals);
 clear optargs newVals
 
 % Parameters
-NUM_FEATS = 177; % number of features used
+NFEAT = 171; % number of features used
+NFEAT_hrv = 113;
+
 fs = 300;       % sampling frequency [Hz]
 
 % Add subfunctions to matlab path
@@ -35,9 +37,9 @@ cd([dbpath 'featextract' slashchar])
 disp('Loading reference from Physionet..')
 ref_filename = [dbpath 'REFERENCE.csv'];
 websave(ref_filename,'https://physionet.org/challenge/2017/REFERENCE-v3.csv');
-reference_tab = readtable(ref_filename);
+reference_tab = readtable(ref_filename,'ReadVariableNames',false);
 fls = reference_tab{:,1};
-clear dataArray delimiter ref_filename formatSpec fileID 
+clear dataArray delimiter ref_filename formatSpec fileID
 
 
 %% Initialize loop
@@ -54,17 +56,17 @@ Flow = 100;   % low pass frequency [Hz]
 Nbut = 10;     % order of Butterworth filter
 d_bp= design(fdesign.bandpass('N,F3dB1,F3dB2',Nbut,Fhigh,Flow,fs),'butter');
 [b_bp2,a_bp2] = tf(d_bp);
-
 clear Fhigh Flow Nbut d_bp
 
 %% Run through files
-for f = 1:length(fls)           
+allfeats = cell2table(cell(0,NFEAT+2));
+for f = 1:length(fls)
     %% Loading data
-    data = myLoadData([dbpath fls{f} '.mat']);
+    data = load([dbpath fls{f} '.mat']);
     fname = fls{f};
     signal = data.val;
-    if size(signal,1)<size(signal,2), signal = signal'; end
-    signalraw =  signal;    
+    if size(signal,1)<size(signal,2), signal = signal'; end % make sure it's column vector
+    signalraw =  signal;
     
     %% Preprocessing
     signal = filtfilt(b_bp,a_bp,signal);             % filtering narrow
@@ -74,9 +76,10 @@ for f = 1:length(fls)
     signalraw = filtfilt(b_bp2,a_bp2,signalraw);     % filtering wide
     signalraw = detrend(signalraw);                  % detrending (optional)
     signalraw = signalraw - mean(signalraw);
-    signal_narrow = signalraw/std(signalraw);        % standardizing
+    signalraw = signalraw/std(signalraw);        % standardizing
     disp(['Preprocessed ' fname '...'])
     
+    % Figuring out if segmentation is used
     if useSegments==1
         WINSIZE = windowSize; % window size (in sec)
         OLAP = percentageOverlap;
@@ -84,8 +87,6 @@ for f = 1:length(fls)
         WINSIZE = length(signal)/fs;
         OLAP=0;
     end
-    
-     
     startp = 1;
     endp = WINSIZE*fs;
     looptrue = true;
@@ -97,27 +98,28 @@ for f = 1:length(fls)
             looptrue = false;
             continue
         end
-        if nseg > 1                        
+        if nseg > 1
             startp(nseg) = startp(nseg-1) + round((1-OLAP)*WINSIZE*fs);
             if length(signal) - endp(nseg-1) < 0.5*WINSIZE*fs
                 endp(nseg) = length(signal);
             else
-                endp(nseg) = startp(nseg) + WINSIZE*fs -1;            
+                endp(nseg) = startp(nseg) + WINSIZE*fs -1;
             end
         end
-        if endp(nseg) == length(signal) 
-            looptrue = false; 
+        if endp(nseg) == length(signal)
+            looptrue = false;
             nseg = nseg - 1;
         end
         nseg = nseg + 1;
     end
     
+    % Obtain features for each available segment
     fetbag = {};
-    parfor n = 1:nseg            
+    parfor n = 1:nseg
         % Get signal of interest
         sig_seg = signal(startp(n):endp(n));
         sig_segraw = signalraw(startp(n):endp(n));
-                        
+        
         % QRS detect
         [qrsseg,featqrs] = multi_qrsdetect(sig_seg,fs,[fname '_s' num2str(n)]);
         
@@ -126,16 +128,15 @@ for f = 1:length(fls)
             try
                 feat_basic=HRV_features(sig_seg,qrsseg{end}./fs,fs);
                 feats_poincare = get_poincare(qrsseg{end}./fs,fs);
-                %feat_vollmer = get_vollmer(qrsseg{end},fs);
-                feat_oli = [feat_basic, feats_poincare];
-                feat_oli(~isreal(feat_oli)|isnan(feat_oli)|isinf(feat_oli)) = 0; % removing not numbers
+                feat_hrv = [feat_basic, feats_poincare];
+                feat_hrv(~isreal(feat_hrv)|isnan(feat_hrv)|isinf(feat_hrv)) = 0; % removing not numbers
             catch
                 warning('Some HRV code failed.')
-                feat_oli = zeros(1,Nfeatoli);
+                feat_hrv = zeros(1,NFEAT_hrv);
             end
         else
             disp('Skipping HRV analysis due to shortage of peaks..')
-            feat_oli = zeros(1,Nfeatoli);
+            feat_hrv = zeros(1,NFEAT_hrv);
         end
         
         % Heart Rate features
@@ -150,7 +151,7 @@ for f = 1:length(fls)
         % SQI metrics
         feats_sqi = ecgsqi(sig_seg,qrsseg,fs);
         
-        % Features on residual        
+        % Features on residual
         featsres = residualfeats(sig_segraw,fs,qrsseg{end});
         
         % Morphological features
@@ -161,17 +162,17 @@ for f = 1:length(fls)
         feat_fer(~isreal(feat_fer)|isnan(feat_fer)|isinf(feat_fer)) = 0; % removing not numbers
         
         % Save features to table for training
-        feats = [feat_oli,feat_fer];
+        feats = [feat_hrv,feat_fer];
         fetbag{n} = feats;
-        %clear qrsseg sig_seg sig_segraw HRbpm feat_tachy feat_brady feats_morph2 featsres feat_fer feat_oli feat_basic feats_poincare
     end
     thisfeats = array2table([repmat(f,nseg,1),[1:nseg]',cell2mat(fetbag')]);%#ok<NBRAK>
     allfeats = [allfeats;thisfeats];
-
+    
 end
 delete('gqrsdet*.*')
 % diary off
 %% Saving Output
+% hardcoded feature names
 names = {'rec_number' 'seg_number' 'sample_AFEv' 'meanRR' 'medianRR' 'SDNN' 'RMSSD' 'SDSD' 'NN50' 'pNN50' 'LFpeak' 'HFpeak' 'totalpower' 'LFpower' ...
     'HFpower' 'nLF' 'nHF' 'LFHF' 'PoincareSD1' 'PoincareSD2' 'Sample Entropy' 'Approximate Entropy'  ...
     'RR' 'DET' 'ENTR' 'L' 'TKEO1'  'DAFa2' 'LZ' ...
@@ -195,8 +196,6 @@ names = [names arrayfun(@(x) strtrim(['xsqi_',num2str(x)]),1:5,'UniformOutput',f
 names = [names 'res1' 'res2' 'res3' 'res4' 'res5'];
 names = [names 'QRSheight','QRSwidth','QRSpow','noPwave','Pheight','Pwidth','Ppow','Theight',...
     'Twidth','Tpow','Theightnorm','Pheightnorm','Prelpow','PTrelpow','Trelpow','QTlen','PRlen'];
-allfeats.Properties.VariableNames = names;    
-    
+allfeats.Properties.VariableNames = names;
 save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) '.mat'],'allfeats','reference_tab');
 
-  
