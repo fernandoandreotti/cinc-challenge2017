@@ -44,11 +44,10 @@ In = In./std(In);
 
 labels = {'A' 'N' 'O' '~'};
 Out = reference_tab{:,2};
-Outbi = cell2mat(cellfun(@(x) strcmp(x,labels),Out,'UniformOutput',0));
-Outde = bi2de(Out);
-Outde(Outde == 4) = 3;
-Outde(Outde == 8) = 4;
-clear Out
+Out = cell2mat(cellfun(@(x) strcmp(x,labels),Out,'UniformOutput',0));
+Out = bi2de(Out);
+Out(Out == 4) = 3;
+Out(Out == 8) = 4;
 %% Bagged trees (oversampled)
 rng(1); % For reproducibility
 %== Subset sampling
@@ -67,6 +66,13 @@ for i=1:k
     ens = fitensemble(In(trainidx,:),Out(trainidx),'Bag',50,'Tree','type','classification');
     [estTree,probTree] = predict(ens,In(testidx,:));
     % Neural networks
+    outbi = zeros(size(Out(trainidx),1),length(labels));
+    for i = 1:length(labels)
+        outbi(labels{i}==Out(trainidx),i) = 1;
+    end
+    Innorm = In - repmat(mean(In),Ntrain,1);
+    Innorm = Innorm/repmat(std(Innorm),Ntrain,1);
+
     net = patternnet(10);
     net = train(net,Innorm(trainidx,:)',outbi');            
     probNN = net(Innorm(testidx,:)')';    
