@@ -8,8 +8,9 @@ This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for M
 
 ## Getting started
 
-`function()` does this
-`function2()` does that
+`ExtractFeatures()` performs feature extraction for each record within a folder
+
+`SegmentClassifier()` trains an Ensemble of Bagged Decision Trees and Multilayer Perceptron Classifier to classify segments of ECG into the defined categories.
 
 
 ## Description of approach
