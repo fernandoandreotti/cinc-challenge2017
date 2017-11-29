@@ -21,8 +21,8 @@ optargs(newVals) = varargin(newVals);
 clear optargs newVals
 
 % Parameters
-NFEAT = 177; % number of features used
-NFEAT_hrv = 140;
+NFEAT = 171; % number of features used
+NFEAT_hrv = 113;
 
 fs = 300;       % sampling frequency [Hz]
 
@@ -60,7 +60,7 @@ clear Fhigh Flow Nbut d_bp
 
 %% Run through files
 allfeats = cell2table(cell(0,NFEAT+2));
-for f = 1:length(fls)
+for f = 1:8%length(fls)
     %% Loading data
     data = load([dbpath fls{f} '.mat']);
     fname = fls{f};
@@ -164,7 +164,6 @@ for f = 1:length(fls)
         % Save features to table for training
         feats = [feat_hrv,feat_fer];
         fetbag{n} = feats;
-        %clear qrsseg sig_seg sig_segraw HRbpm feat_tachy feat_brady feats_morph2 featsres feat_fer feat_oli feat_basic feats_poincare
     end
     thisfeats = array2table([repmat(f,nseg,1),[1:nseg]',cell2mat(fetbag')]);%#ok<NBRAK>
     allfeats = [allfeats;thisfeats];
@@ -173,8 +172,9 @@ end
 delete('gqrsdet*.*')
 % diary off
 %% Saving Output
+% hardcoded feature names
 names = {'rec_number' 'seg_number' 'sample_AFEv' 'meanRR' 'medianRR' 'SDNN' 'RMSSD' 'SDSD' 'NN50' 'pNN50' 'LFpeak' 'HFpeak' 'totalpower' 'LFpower' ...
-    'HFpower' 'nLF' 'nHF' 'LFHF' 'PoincareSD1' 'PoincareSD2' 'Sample Entropy' 'Approximate Entropy'  ...
+    'HFpower' 'nLF' 'nHF' 'LFHF' 'PoincareSD1' 'PoincareSD2' 'SampEn' 'ApEn'  ...
     'RR' 'DET' 'ENTR' 'L' 'TKEO1'  'DAFa2' 'LZ' ...
     'Clvl1' 'Clvl2' 'Clvl3' 'Clvl4' 'Clvl5' 'Clvl6' 'Clvl7' 'Clvl8' 'Clvl9' ...
     'Clvl10' 'Dlvl1' 'Dlvl2' 'Dlvl3' 'Dlvl4' ...
@@ -197,6 +197,5 @@ names = [names 'res1' 'res2' 'res3' 'res4' 'res5'];
 names = [names 'QRSheight','QRSwidth','QRSpow','noPwave','Pheight','Pwidth','Ppow','Theight',...
     'Twidth','Tpow','Theightnorm','Pheightnorm','Prelpow','PTrelpow','Trelpow','QTlen','PRlen'];
 allfeats.Properties.VariableNames = names;
-
 save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) '.mat'],'allfeats','reference_tab');
 

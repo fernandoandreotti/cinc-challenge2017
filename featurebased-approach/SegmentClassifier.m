@@ -1,10 +1,7 @@
-clear feat
-
-% Load training data features for 10 sec segments
-
-load('... .mat')
+function SegmentClassifier(feature_file)
 
 
+load(feature_file)
 [n1,n2]=size(allfeats);
 NF=n2-2;
 % Get some summary statistics on the distribution of the features in each
