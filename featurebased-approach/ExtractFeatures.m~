@@ -1,36 +1,52 @@
 function ExtractFeatures(dbpath,varargin)
-% This func 
+% This function extracts features for each record present  in a folder
 % 
+%  Input:
+%       - dbpath:         directory where database is
+%       (optional inputs)
+%           - useSegments:       segment signals into windows (bool)?
+%           - windowSize:        size of window used in segmenting record
+%           - percentageOverlap: overlap between windows
 % 
 
-% Preset Inputs
-useSegments=1; % Set to 1 to segment the signals
-windowSize=10; % window size (in sec)
-percentageOverlap=0.8;
-
-% Defining path (for windows and linux)
+% Default arguments
 slashchar = char('/'*isunix + '\'*(~isunix));
+if ~strcmp(dbpath(end),slashchar)
+    dbpath = [dbpath slashchar];
+end
+optargs = {1 10 0.8};  % default values for input arguments
+newVals = cellfun(@(x) ~isempty(x), varargin);
+optargs(newVals) = varargin(newVals);
+[useSegments, windowSize, percentageOverlap] = optargs{:};
+clear optargs newVals
+
+
+
+% Add subfunctions to matlab path
+
 mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
 addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
 
-%% Parameters
 
 % Find recordings
-cd([mainpath 'preparation' slashchar])
-filename = [dbpath 'REFERENCE-v2.csv'];
+mkdir([dbpath 'featextract'])
+cd([dbpath 'featextract' slashchar])
+disp('Loading reference from Physionet..')
+ref_filename = [dbpath 'REFERENCE.csv'];
+websave(ref_filename,'https://physionet.org/challenge/2017/REFERENCE-v3.csv');
 delimiter = ',';
 formatSpec = '%q%q%[^\n\r]';
-fileID = fopen(filename,'r');
+fileID = fopen(ref_filename,'r');
 dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
+fclose(fileID);
 fls = dataArray{1};
 ann = char(dataArray{2});
-clear dataArray delimiter filename formatSpec
-%% Close the text file.
-fclose(fileID);
-tab_output = cell(length(fls),179);
-tab_output(:,1:2) = [fls cellstr(ann)];
-% persistent allfeats
-fs = 300;
+clear dataArray delimiter ref_filename formatSpec fileID 
+
+
+%% Initialize loop
+NUM_FEATS = 177; % number of features used
+fs = 300;       % sampling frequency [Hz]
 
 % Wide BP
 Fhigh = 5;  % highpass frequency [Hz]
@@ -47,9 +63,9 @@ d_bp= design(fdesign.bandpass('N,F3dB1,F3dB2',Nbut,Fhigh,Flow,fs),'butter');
 [b_bp2,a_bp2] = tf(d_bp);
 
 clear Fhigh Flow Nbut d_bp
-allfeats = cell2table(cell(0,179));
-% Run through files
+allfeats = cell2table(cell(0,NUM_FEATS+2));
 
+%% Run through files
 for f = 1:length(fls)           
     %% Loading data
     data = myLoadData([dbpath fls{f} '.mat']);

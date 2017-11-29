@@ -10,13 +10,21 @@ function ExtractFeatures(dbpath,varargin)
 % 
 
 % Default arguments
+slashchar = char('/'*isunix + '\'*(~isunix));
+if ~strcmp(dbpath(end),slashchar)
+    dbpath = [dbpath slashchar];
+end
 optargs = {1 10 0.8};  % default values for input arguments
 newVals = cellfun(@(x) ~isempty(x), varargin);
 optargs(newVals) = varargin(newVals);
 [useSegments, windowSize, percentageOverlap] = optargs{:};
+clear optargs newVals
+
+% Parameters
+NUM_FEATS = 177; % number of features used
+fs = 300;       % sampling frequency [Hz]
 
 % Add subfunctions to matlab path
-slashchar = char('/'*isunix + '\'*(~isunix));
 mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
 addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
 
@@ -24,21 +32,15 @@ addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder 
 % Find recordings
 mkdir([dbpath 'featextract'])
 cd([dbpath 'featextract' slashchar])
-filename = [dbpath 'REFERENCE-v2.csv'];
-delimiter = ',';
-formatSpec = '%q%q%[^\n\r]';
-fileID = fopen(filename,'r');
-dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
-fls = dataArray{1};
-ann = char(dataArray{2});
-clear dataArray delimiter filename formatSpec
-%% Close the text file.
-fclose(fileID);
-tab_output = cell(length(fls),179);
-tab_output(:,1:2) = [fls cellstr(ann)];
-% persistent allfeats
-fs = 300;
+disp('Loading reference from Physionet..')
+ref_filename = [dbpath 'REFERENCE.csv'];
+websave(ref_filename,'https://physionet.org/challenge/2017/REFERENCE-v3.csv');
+reference_tab = readtable(ref_filename);
+fls = reference_tab{:,1};
+clear dataArray delimiter ref_filename formatSpec fileID 
 
+
+%% Initialize loop
 % Wide BP
 Fhigh = 5;  % highpass frequency [Hz]
 Flow = 45;   % low pass frequency [Hz]
@@ -54,9 +56,8 @@ d_bp= design(fdesign.bandpass('N,F3dB1,F3dB2',Nbut,Fhigh,Flow,fs),'butter');
 [b_bp2,a_bp2] = tf(d_bp);
 
 clear Fhigh Flow Nbut d_bp
-allfeats = cell2table(cell(0,179));
-% Run through files
 
+%% Run through files
 for f = 1:length(fls)           
     %% Loading data
     data = myLoadData([dbpath fls{f} '.mat']);
@@ -196,6 +197,6 @@ names = [names 'QRSheight','QRSwidth','QRSpow','noPwave','Pheight','Pwidth','Ppo
     'Twidth','Tpow','Theightnorm','Pheightnorm','Prelpow','PTrelpow','Trelpow','QTlen','PRlen'];
 allfeats.Properties.VariableNames = names;    
     
-save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) '.mat'],'allfeats','ann');
+save([spath 'allfeatures_olap' num2str(OLAP) '_win' num2str(WINSIZE) '.mat'],'allfeats','reference_tab');
 
   
