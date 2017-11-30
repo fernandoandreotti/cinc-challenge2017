@@ -4,7 +4,7 @@ This approach makes use of several previously described heart rate variability m
 
 ## Dependencies
 
-This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for Matlab/Octave v0.99](https://physionet.org/physiotools/matlab/wfdb-app-matlab/) as the only dependency. Please refer to the toolbox's website for howto install.
+This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for Matlab/Octave v0.9.8](https://physionet.org/physiotools/matlab/wfdb-app-matlab/) as the only dependency. Please refer to the toolbox's website for how to install.
 
 ## Getting started
 
