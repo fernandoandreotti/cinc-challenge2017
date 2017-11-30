@@ -28,7 +28,7 @@ fs = 300;       % sampling frequency [Hz]
 
 % Add subfunctions to matlab path
 mainpath = (strrep(which(mfilename),['preparation' slashchar mfilename '.m'],''));
-addpath(genpath([mainpath 'subfunctions' slashchar])) % add subfunctions folder to path
+addpath(genpath([mainpath(1:end-length(mfilename)-2) 'subfunctions' slashchar])) % add subfunctions folder to path
 
 
 % Find recordings

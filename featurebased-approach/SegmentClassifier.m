@@ -45,7 +45,7 @@ In = In./std(In);
 labels = {'A' 'N' 'O' '~'};
 Out = reference_tab{:,2};
 Outbi = cell2mat(cellfun(@(x) strcmp(x,labels),Out,'UniformOutput',0));
-Outde = bi2de(Out);
+Outde = bi2de(Outbi);
 Outde(Outde == 4) = 3;
 Outde(Outde == 8) = 4;
 clear Out
@@ -53,18 +53,17 @@ clear Out
 rng(1); % For reproducibility
 %== Subset sampling
 k = 5;
-cv = cvpartition(Out,'kfold',k);
+cv = cvpartition(Outde,'kfold',k);
 confusion = zeros(4,4,k);
 ensave = {};
 F1save = zeros(k,4);
 for i=1:k
-    disp(i)
+    fprintf('Cross-validation loop %d \n',i)
     trainidx = find(training(cv,i));
-    trainidx = [trainidx; [8528:length(ann)]'];
-    testidx  = find(test(cv,i));
     trainidx = trainidx(randperm(length(trainidx)));
+    testidx  = find(test(cv,i));
     % Bagged trees
-    ens = fitensemble(In(trainidx,:),Out(trainidx),'Bag',50,'Tree','type','classification');
+    ens = fitensemble(In(trainidx,:),Outde(trainidx),'Bag',50,'Tree','type','classification');
     [estTree,probTree] = predict(ens,In(testidx,:));
     % Neural networks
     net = patternnet(10);
