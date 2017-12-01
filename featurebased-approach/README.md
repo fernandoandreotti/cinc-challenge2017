@@ -17,7 +17,7 @@ This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for M
 
 ## Description of approach
 
-Signal processing chain is divided in the following stages:
+The feature extraction procedure is divided in the following stages:
 
 ### Preprocessing
 
