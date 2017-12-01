@@ -11,58 +11,42 @@ function feats = ecgsqi(signal,qrs,fs)
 %
 %
 % --
-% NIBP estimation
+% ECG classification from single-lead segments using Deep Convolutional Neural 
+% Networks and Feature-Based Approaches - December 2017
+% 
 % Released under the GNU General Public License
 %
-% Copyright (C) 2017  Fernando Andreotti
-% University of Oxford, Computational Intelligence in BIomedical Monitoring (CIBIM)
+% Copyright (C) 2017  Fernando Andreotti, Oliver Carr
+% University of Oxford, Insitute of Biomedical Engineering, CIBIM Lab - Oxford 2017
 % fernando.andreotti@eng.ox.ac.uk
 %
-% For further information please visit: $WEBSITE
-%
+% 
+% For more information visit: https://github.com/fernandoandreotti/cinc-challenge2017
+% 
 % Referencing this work
 %
-% $SOME_PUBLICATION
+% Andreotti, F., Carr, O., Pimentel, M.A.F., Mahdi, A., & De Vos, M. (2017). 
+% Comparing Feature Based Classifiers and Convolutional Neural Networks to Detect 
+% Arrhythmia from Short Segments of ECG. In Computing in Cardiology. Rennes (France).
 %
-% Last updated : 06/03/2017
-%
+% Last updated : December 2017
+% 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation, either version 3 of the License, or
 % (at your option) any later version.
-%
+% 
 % This program is distributed in the hope that it will be useful,
 % but WITHOUT ANY WARRANTY; without even the implied warranty of
 % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 % GNU General Public License for more details.
-%
+% 
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 %% Parameters
 WIN_ACCEPT = 0.10;    % acceptance interval for FP in QRS detection (in s)
 WIN_QRS = 0.1;         % window used to delimit QRS complexes (in s)
-% WIN = 6*fs;           % use 6 s to calculate SQI
-% OLAP = 0.5*fs;            % window overlap
-% NUM_SEG = ceil((length(signal)-WIN/2)/OLAP);
-
-% sqi_tmp = NaN(Nsqi,NUM_SEG);
-% qrs = [];
-% startp = 1;
-% endp = WIN;
-% runloop = true;
-% count = 1;
-% while runloop
-%     % Exit condition
-%     if endp >= length(signal)
-%         runloop = false;
-%         endp = length(signal);
-%     end
-%     sig = signal(startp:endp); % chunk of data used on this iteration
-
-
-
-%% Individual SQIs
 
 % Temporal SQIs
 % feat_flat = flatsqi(signal);  % flatline detection
@@ -87,17 +71,6 @@ feats = [feat_stdsqi, feat_ksqi, feat_ssqi, ...
 
 feats(isnan(feats)) = 0; % making sure there are no NaNs
 
-%     % Next loop
-%     startp = startp + OLAP; % move window
-%     endp = startp + WIN -1;
-%     count = count +1;
-% end
-
-% sqi_tmp(:,all(isnan(sqi_tmp))) = []; % removing empty columns
-% sqi = mean(sqi_tmp);
-% sqi = reshape(repmat(sqi,OLAP,1),[],1);
-% sqi = [repmat(sqi(1),floor(WIN/2),1); sqi; ... % padding borders
-%     repmat(sqi(end),floor(WIN/2)-OLAP,1)];
 
 
 

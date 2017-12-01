@@ -12,19 +12,19 @@ function TrainClassifier(feature_file)
 % Released under the GNU General Public License
 %
 % Copyright (C) 2017  Fernando Andreotti, Oliver Carr
-% University of Oxford, Insitute of Biomedical Engineering, CIBIM Lab - Oxford 2017
-% fernando.andreotti@eng.ox.ac.uk
+% University of Oxford,  - Oxford 2014
+% joachim.behar@oxfordalumni.org, fernando.andreotti@eng.ox.ac.uk
 %
 % 
-% For more information visit: https://github.com/fernandoandreotti/cinc-challenge2017
+% For more information visit: https://www.physionet.org/physiotools/ipmcode/fecgsyn/
 % 
 % Referencing this work
 %
-% Andreotti, F., Carr, O., Pimentel, M.A.F., Mahdi, A., & De Vos, M. (2017). 
-% Comparing Feature Based Classifiers and Convolutional Neural Networks to Detect 
-% Arrhythmia from Short Segments of ECG. In Computing in Cardiology. Rennes (France).
+%   Behar Joachim, Andreotti Fernando, Zaunseder Sebastian, Li Qiao, Oster Julien, Clifford Gari D. 
+%   An ECG simulator for generating maternal-foetal activity mixtures on abdominal ECG recordings. 
+%   Physiological Measurement.35 1537-1550. 2014.
 %
-% Last updated : December 2017
+% Last updated : 10-03-2016
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
