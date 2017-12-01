@@ -1,5 +1,5 @@
-# ECG classification from single lead short segments
-### Computing in Cardiology Challenge 2017: Atrial Fibrillation (AF) Classification from a short single lead Electrocardiogram (ECG) recording
+# ECG classification from single lead short segments using Deep Convolutional Neural Networks and Feature-Based Approaches
+### Our entry for the Computing in Cardiology Challenge 2017: Atrial Fibrillation (AF) Classification from a short single lead Electrocardiogram (ECG) recording
 
 This repository contains our solution to the Physionet Challenge 2017 by [1], presented at the Computing in Cardiology conference 2017. As part of the Challenge, based on short single-lead ECG segments with 10-60 seconds duration, the classifier should output one of the following classes:
 
