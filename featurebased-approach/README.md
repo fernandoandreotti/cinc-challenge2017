@@ -4,18 +4,20 @@ This approach makes use of several previously described heart rate variability m
 
 ## Dependencies
 
-This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for Matlab/Octave v0.99](https://physionet.org/physiotools/matlab/wfdb-app-matlab/) as the only dependency. Please refer to the toolbox's website for howto install.
+This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for Matlab/Octave v0.9.8](https://physionet.org/physiotools/matlab/wfdb-app-matlab/) as the only dependency. Please refer to the toolbox's website for how to install.
 
 ## Getting started
 
 `ExtractFeatures()` performs feature extraction for each record within a folder
 
-`SegmentClassifier()` trains an Ensemble of Bagged Decision Trees and Multilayer Perceptron Classifier to classify segments of ECG into the defined categories.
+`TrainClassifier()` trains an Ensemble of Bagged Decision Trees and Multilayer Perceptron Classifier to classify segments of ECG into the defined categories. Saves resulting classifiers for future usage
+
+`PredictTestSet()` makes use of pre-trained classifiers to produce results on test set
 
 
 ## Description of approach
 
-Signal processing chain is divided in the following stages:
+The feature extraction procedure is divided in the following stages:
 
 ### Preprocessing
 

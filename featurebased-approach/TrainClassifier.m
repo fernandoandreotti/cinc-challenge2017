@@ -109,7 +109,7 @@ for i=1:k
     
     if F1 > F1_best
         F1_best = F1;
-        ensTree_best = ens;
+        ensTree_best = compact(ens);
         nnet_best = net;
     end
 end
