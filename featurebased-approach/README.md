@@ -10,7 +10,9 @@ This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for M
 
 `ExtractFeatures()` performs feature extraction for each record within a folder
 
-`SegmentClassifier()` trains an Ensemble of Bagged Decision Trees and Multilayer Perceptron Classifier to classify segments of ECG into the defined categories.
+`TrainClassifier()` trains an Ensemble of Bagged Decision Trees and Multilayer Perceptron Classifier to classify segments of ECG into the defined categories. Saves resulting classifiers for future usage
+
+`PredictTestSet()` makes use of pre-trained classifiers to produce results on test set
 
 
 ## Description of approach
