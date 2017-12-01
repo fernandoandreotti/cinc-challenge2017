@@ -98,6 +98,7 @@ for i=1:k
     for r = 1:size(C,1)
         [~,estimate(r)] = max(C(r,:));
     end
+%     estimate = estTree;
     confmat = confusionmat(Out(testidx),estimate);
     confusion(:,:,i) = confmat;
     ensave{i} = ens;
@@ -117,7 +118,7 @@ end
 fprintf('Final F1 measure:  %1.4f\n',mean(F1))
 
 
-save('results_allfeat.mat','F1save','ensave')
+
 
 
 
