@@ -1,7 +1,13 @@
-# ECG classification from single lead short segments using Deep Convolutional Neural Networks and Feature-Based Approaches
-### Our entry for the Computing in Cardiology Challenge 2017: Atrial Fibrillation (AF) Classification from a short single lead Electrocardiogram (ECG) recording
+## ECG classification from single-lead segments using _Deep Convolutional Neural Networks_ and _Feature-Based Approaches_
 
-This repository contains our solution to the Physionet Challenge 2017 by [1], presented at the Computing in Cardiology conference 2017. As part of the Challenge, based on short single-lead ECG segments with 10-60 seconds duration, the classifier should output one of the following classes:
+#### Our entry for the Computing in Cardiology Challenge 2017: Atrial Fibrillation (AF) Classification from a short single lead Electrocardiogram (ECG) recording
+
+When using this code, please cite: 
+
+> Andreotti, F., Carr, O., Pimentel, M.A.F., Mahdi, A., & De Vos, M. (2017). Comparing Feature Based Classifiers and Convolutional Neural Networks to Detect Arrhythmia from Short Segments of ECG. In Computing in Cardiology. Rennes (France).
+
+
+This repository contains our solution [1] to the Physionet Challenge 2017 presented at the Computing in Cardiology conference 2017. As part of the Challenge, based on short single-lead ECG segments with 10-60 seconds duration, the classifier should output one of the following classes:
 
 | Class  | Description |
 | ----- | -------------------:|
