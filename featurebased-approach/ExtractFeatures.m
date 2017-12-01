@@ -149,6 +149,7 @@ for f = 1:length(fls)
     
     % Obtain features for each available segment
     fetbag = {};
+    feat_hrv = [];
     parfor n = 1:nseg
         % Get signal of interest
         sig_seg = signal(startp(n):endp(n));
