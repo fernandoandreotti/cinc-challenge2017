@@ -75,7 +75,6 @@ rng(1); % For reproducibility
 k = 5;
 cv = cvpartition(Outde,'kfold',k);
 confusion = zeros(4,4,k);
-ensave = {};
 F1save = zeros(k,4);
 F1_best = 0;
 for i=1:k
@@ -85,7 +84,7 @@ for i=1:k
     testidx  = find(test(cv,i));
     %% Bagged trees (oversampled)
     ens = fitensemble(In(trainidx,:),Outde(trainidx),'Bag',50,'Tree','type','classification');
-    [estTree,probTree] = predict(ens,In(testidx,:));
+    [~,probTree] = predict(ens,In(testidx,:));
     
     %% Neural networks
     net = patternnet(10);
@@ -113,8 +112,8 @@ for i=1:k
         ensTree_best = ens;
         nnet_best = net;
     end
-    
 end
+%% Producing statistics
 confusion = sum(confusion,3);
 F1 = zeros(1,4);
 for i = 1:4
@@ -123,8 +122,10 @@ for i = 1:4
 end
 fprintf('Final F1 measure:  %1.4f\n',mean(F1))
 
-
-save('results_allfeat.mat','F1save','F1_best','ensTree_best','nnet_best')
+%% Save output
+save('results_allfeat.mat','F1save','F1_best')
+save('ensTree.mat','ensTree_best')
+save('nNets.mat','nnet_best')
 
 
 
