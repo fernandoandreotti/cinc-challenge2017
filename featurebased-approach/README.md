@@ -8,11 +8,13 @@ This code was tested on Matlab R2017a (Version 9.2) with the [WFDB Toolbox for M
 
 ## Getting started
 
-`ExtractFeatures()` performs feature extraction for each record within a folder
+The following steps are necessary to perform the feature-based arrhythmia detection.
 
-`TrainClassifier()` trains an Ensemble of Bagged Decision Trees and Multilayer Perceptron Classifier to classify segments of ECG into the defined categories. Saves resulting classifiers for future usage
+1. `ExtractFeatures()` performs feature extraction for each record within a folder
 
-`PredictTestSet()` makes use of pre-trained classifiers to produce results on test set
+2. `TrainClassifier()` trains an Ensemble of Bagged Decision Trees and Multilayer Perceptron Classifier to classify segments of ECG into the defined categories. Saves resulting classifiers for future usage
+
+3. `PredictTestSet()` makes use of pre-trained classifiers to produce results on test set
 
 
 ## Description of approach
