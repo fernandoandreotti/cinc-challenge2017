@@ -2,7 +2,7 @@
 
 #### Our entry for the Computing in Cardiology Challenge 2017: Atrial Fibrillation (AF) Classification from a short single lead Electrocardiogram (ECG) recording
 
-When using this code, please cite: 
+When using this code, please cite [our paper](http://prucka.com/2017CinC/pdf/360-239.pdf): 
 
 > Andreotti, F., Carr, O., Pimentel, M.A.F., Mahdi, A., & De Vos, M. (2017). Comparing Feature Based Classifiers and Convolutional Neural Networks to Detect Arrhythmia from Short Segments of ECG. In Computing in Cardiology. Rennes (France).
 
