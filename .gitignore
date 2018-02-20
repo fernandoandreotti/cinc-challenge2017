@@ -8,3 +8,11 @@ deeplearn-approach/.python_history
 deeplearn-approach/.bash_history
 .bash_history
 .config/
+.cache/
+.ipython/
+.local/
+.python_history
+deeplearn-approach/__pycache__/
+deeplearn-approach/datatmp/
+featurebased-approach/preparing_entry/
+
