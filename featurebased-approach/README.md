@@ -41,7 +41,7 @@ A consensus based on kernel density estimation is output as final decision.
 | -------- | ------------------- | ----:|
 | Time Domain | SDNN, RMSSD, NNx | 8 |
 | Frequency Domain | LF power, HF power, LF/HF | 8 |
-| Non-linear Features | Poincaré plot, Recurrence Quantification Analysis | 95 |
+| Non-linear Features | SampEn, ApEn, Poincaré plot, Recurrence Quantification Analysis | 95 |
 | Signal Quality | bSQI, iSQI, kSQI, rSQI | 36 |
 | Morphological Features | P-wave power, T-wave power, QT interval | 22 |
 |  | Total | 169 |
