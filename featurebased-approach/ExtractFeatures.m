@@ -55,7 +55,7 @@ optargs(newVals) = varargin(newVals);
 clear optargs newVals
 
 % Parameters
-NFEAT = 171; % number of features used
+NFEAT = 169; % number of features used
 NFEAT_hrv = 113;
 
 fs = 300;       % sampling frequency [Hz]
@@ -220,7 +220,7 @@ names = {'rec_number' 'seg_number' 'sample_AFEv' 'meanRR' 'medianRR' 'SDNN' 'RMS
     'DistCen' 'DistCennL' 'DistCennS' 'DistNN' 'DistNNnL' 'DistNNnS' 'DistNext' 'DistNextnL' 'DistNextnS' 'ClustDistMax' 'ClustDistMin' ...
     'ClustDistMean' 'ClustDistSTD' 'ClustDistMed' 'MajorAxis' 'percR3' 'percR5' 'percR10' 'percR20' 'percR30' 'percR40' ...
     'Xcent' 'Ycent' 'rad1' 'rad2' 'rad1rad2' 'theta' 'NoClust1' 'NoClust2' 'NoClust3' 'NoClust4' 'NoClust5' 'NoClust6' 'NoClust7'};
-names = [names 'gentemp' 'numect' 'amp_varsqi' 'amp_stdsqi' 'amp_mean'];
+names = [names 'amp_varsqi' 'amp_stdsqi' 'amp_mean'];
 names = [names 'tachy' 'brady' 'stdsqi' 'ksqi' 'ssqi' 'psqi'];
 combs = nchoosek(1:5,2);
 combs = num2cell(combs,2);

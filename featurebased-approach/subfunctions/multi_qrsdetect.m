@@ -197,19 +197,13 @@ clear lag flag consqrs
 
 %% Generating some features
 
-% Feature proportion of ectopic beats
-feat_ect = numel(ect_qrs)/(numel(qrs{4})+numel(ect_qrs));
-
-% Binary feature, could not generate templates (maybe noisy?)
-feat_tpl = matchedf;
-
 % Amplitude around QRS complex
 normsig = signal./median(signal(qrs{end})); % normalized amplitude
 feat_amp = var(normsig(qrs{end})); % QRS variations in amplitude
 feat_amp2 = std(normsig(qrs{end})); % QRS variations in amplitude
 feat_amp3 = mean(diff(normsig(qrs{end}))); % QRS variations in amplitude
 
-feats = [feat_tpl feat_ect feat_amp feat_amp2 feat_amp3];
+feats = [feat_amp feat_amp2 feat_amp3];
 
 %% Plots for sanity check
 % subplot(2,1,1)
