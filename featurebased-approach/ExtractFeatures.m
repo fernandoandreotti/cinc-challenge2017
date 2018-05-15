@@ -175,7 +175,7 @@ for f = 1:length(fls)
         end
         
         % Heart Rate features
-        HRbpm = median(60./(diff(qrsseg{end})));
+        HRbpm = median(60./(diff(qrsseg{end}./fs)));
         %obvious cases: tachycardia ( > 100 beats per minute (bpm) in adults)
         feat_tachy = normcdf(HRbpm,120,20); % sampling from normal CDF
         %See e.g.   x = 10:10:200; p = normcdf(x,120,20); plot(x,p)
