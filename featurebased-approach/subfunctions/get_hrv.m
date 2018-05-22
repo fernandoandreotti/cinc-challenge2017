@@ -116,7 +116,7 @@ HRV.RMSSD=sqrt(mean_diff_int);
 
 HRV.SDSD=std(D);
   
-HRV.NN50=sum(D>50);   
+HRV.NN50=sum(abs(D)>50);   
 
 HRV.pNN50=HRV.NN50/length(NN_int_sec);
 
