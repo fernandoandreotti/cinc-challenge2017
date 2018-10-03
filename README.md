@@ -1,4 +1,4 @@
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![license](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE)
 
 ## ECG classification from single-lead segments using _Deep Convolutional Neural Networks_ and _Feature-Based Approaches_
 
