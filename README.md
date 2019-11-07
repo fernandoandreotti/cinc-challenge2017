@@ -1,4 +1,5 @@
 [![license](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/comparing-feature-based-classifiers-and/arrhythmia-detection-on-the-physionet)](https://paperswithcode.com/sota/arrhythmia-detection-on-the-physionet?p=comparing-feature-based-classifiers-and)
 
 ## ECG classification from single-lead segments using _Deep Convolutional Neural Networks_ and _Feature-Based Approaches_
 
